@@ -206,6 +206,11 @@ This plugin follows:
 
 ## Changelog
 
+### 1.0.2 - 2025
+- **Fixed:** Focus Position feature now initializes correctly regardless of plugin detection timing
+- **Fixed:** Removed dependency check that prevented Focus Position from working in some cases
+- **Improved:** Feature detection now happens at runtime instead of during initialization
+
 ### 1.0.1 - 2025
 - **Fixed:** Updated block type detection for Etch compatibility
 - **Changed:** Now supports `etch/element`, `etch/dynamic-element`, `etch/raw-html`, and `etch/component` blocks

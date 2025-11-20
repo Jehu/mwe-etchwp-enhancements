@@ -137,8 +137,11 @@ class Plugin {
 			$this->image_enhancement->init();
 		}
 
-		// Initialize Focus Position (only if plugin is available).
-		if ( $this->is_focus_position_enabled() && $this->is_any_focus_plugin_active() ) {
+		// Initialize Focus Position.
+		// Note: We always initialize this feature if enabled, regardless of plugin detection.
+		// The feature will only apply if focus point meta data exists for images.
+		// This avoids timing issues with plugin detection during initialization.
+		if ( $this->is_focus_position_enabled() ) {
 			$this->focus_position = Focus_Position::get_instance();
 			$this->focus_position->init();
 		}

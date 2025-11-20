@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -91,6 +91,11 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 == Changelog ==
 
+= 1.0.2 =
+* Fixed: Focus Position feature now initializes correctly regardless of plugin detection timing
+* Fixed: Removed dependency check that prevented Focus Position from working in some cases
+* Improved: Feature detection now happens at runtime instead of during initialization
+
 = 1.0.1 =
 * Fixed: Updated block type detection for Etch compatibility
 * Changed: Now supports etch/element, etch/dynamic-element, etch/raw-html, and etch/component blocks
@@ -106,6 +111,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+Fixes Focus Position feature initialization. Update recommended if using focus point plugins.
 
 = 1.0.1 =
 Important compatibility update for current Etch versions. Updates block type detection to support new Etch block architecture.
