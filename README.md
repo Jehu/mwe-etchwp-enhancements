@@ -1,5 +1,7 @@
 # MWE EtchWP Enhancements
 
+![Etch Image Enhancement Plugin](etch-image-enhancement-plugin.webp)
+
 A WordPress plugin that enhances the [Etch page builder](https://etchwp.com) with improved image handling and focus position support.
 
 ## Features
