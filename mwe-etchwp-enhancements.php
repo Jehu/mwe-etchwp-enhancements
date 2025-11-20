@@ -9,7 +9,7 @@
  *
  * @wordpress-plugin
  * Plugin Name:       MWE EtchWP Enhancements
- * Plugin URI:        https://www.michelyweb.de
+ * Plugin URI:        https://github.com/Jehu/mwe-etchwp-enhancements
  * Description:       Enhances Etch page builder with improved image handling and focus position support for responsive images.
  * Version:           1.0.1
  * Requires at least: 5.9
