@@ -30,6 +30,40 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Helper {
 
 	/**
+	 * Check if a block type should be processed for image enhancement.
+	 *
+	 * This method determines which Etch block types contain images and should
+	 * be processed by the image enhancement and focus position features.
+	 *
+	 * @since  1.0.1
+	 * @param  string $block_name The block name to check.
+	 * @return bool               Whether the block should be processed.
+	 */
+	public static function is_processable_etch_block( $block_name ) {
+		// Default Etch blocks that can contain images.
+		$processable_blocks = array(
+			'etch/element',         // HTML elements (main image container).
+			'etch/dynamic-element', // Dynamic HTML elements.
+			'etch/raw-html',        // Raw HTML blocks.
+			'etch/component',       // Component blocks (can contain any content).
+		);
+
+		/**
+		 * Filter the list of processable Etch block types.
+		 *
+		 * Allows customization of which block types are processed for image
+		 * enhancement and focus position features.
+		 *
+		 * @since 1.0.1
+		 *
+		 * @param array $processable_blocks Array of block names that should be processed.
+		 */
+		$processable_blocks = apply_filters( 'mwe_etchwp_processable_blocks', $processable_blocks );
+
+		return in_array( $block_name, $processable_blocks, true );
+	}
+
+	/**
 	 * Find attachment ID by searching for filename in database.
 	 *
 	 * This method tries multiple strategies to find the attachment:

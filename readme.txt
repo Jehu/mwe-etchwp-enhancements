@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -91,6 +91,13 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 == Changelog ==
 
+= 1.0.1 =
+* Fixed: Updated block type detection for Etch compatibility
+* Changed: Now supports etch/element, etch/dynamic-element, etch/raw-html, and etch/component blocks
+* Added: New filter `mwe_etchwp_processable_blocks` to customize which block types are processed
+* Removed: Support for legacy etch/block (no longer exists in current Etch versions)
+* Improved: Better code documentation and centralized block detection logic
+
 = 1.0.0 =
 * Initial release
 * Image enhancement feature with automatic srcset, dimensions, alt, and sizes attributes
@@ -99,6 +106,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Important compatibility update for current Etch versions. Updates block type detection to support new Etch block architecture.
 
 = 1.0.0 =
 Initial release of MWE EtchWP Enhancements.
@@ -114,6 +124,10 @@ Control whether image enhancement is enabled.
 **mwe_etchwp_enable_focus_position**
 Control whether focus position feature is enabled.
 `apply_filters( 'mwe_etchwp_enable_focus_position', true )`
+
+**mwe_etchwp_processable_blocks**
+Customize which Etch block types are processed for image enhancement and focus position.
+`apply_filters( 'mwe_etchwp_processable_blocks', array( 'etch/element', 'etch/dynamic-element', 'etch/raw-html', 'etch/component' ) )`
 
 = Constants =
 

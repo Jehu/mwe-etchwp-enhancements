@@ -117,6 +117,33 @@ Control whether focus position feature is enabled.
 apply_filters( 'mwe_etchwp_enable_focus_position', true );
 ```
 
+#### `mwe_etchwp_processable_blocks`
+
+Customize which Etch block types are processed for image enhancement and focus position.
+
+```php
+/**
+ * @param array $processable_blocks Default: ['etch/element', 'etch/dynamic-element', 'etch/raw-html', 'etch/component']
+ * @return array
+ */
+apply_filters( 'mwe_etchwp_processable_blocks', $processable_blocks );
+```
+
+**Example usage:**
+
+```php
+// Add a custom block type to processing
+add_filter( 'mwe_etchwp_processable_blocks', function( $blocks ) {
+    $blocks[] = 'etch/custom-block';
+    return $blocks;
+} );
+
+// Remove a specific block from processing
+add_filter( 'mwe_etchwp_processable_blocks', function( $blocks ) {
+    return array_diff( $blocks, array( 'etch/raw-html' ) );
+} );
+```
+
 ### Available Constants
 
 #### `MWE_ETCHWP_IMAGE_ENHANCEMENT`
@@ -178,6 +205,13 @@ This plugin follows:
 - Strict typing with `declare(strict_types=1)`
 
 ## Changelog
+
+### 1.0.1 - 2025
+- **Fixed:** Updated block type detection for Etch compatibility
+- **Changed:** Now supports `etch/element`, `etch/dynamic-element`, `etch/raw-html`, and `etch/component` blocks
+- **Added:** New filter `mwe_etchwp_processable_blocks` to customize which block types are processed
+- **Removed:** Support for legacy `etch/block` (no longer exists in current Etch versions)
+- **Improved:** Better code documentation and centralized block detection logic
 
 ### 1.0.0 - 2025
 - Initial release

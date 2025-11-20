@@ -111,8 +111,8 @@ class Focus_Position {
 	 * @return string                The modified block content.
 	 */
 	public function filter_images( $block_content, $block ) {
-		// Process etch/block blocks (which contain the actual images).
-		if ( 'etch/block' !== ( $block['blockName'] ?? '' ) ) {
+		// Process only supported Etch blocks that can contain images.
+		if ( ! Helper::is_processable_etch_block( $block['blockName'] ?? '' ) ) {
 			return $block_content;
 		}
 
