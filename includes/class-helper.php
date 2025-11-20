@@ -66,9 +66,11 @@ class Helper {
 	/**
 	 * Find attachment ID by searching for filename in database.
 	 *
-	 * This method tries multiple strategies to find the attachment:
-	 * 1. Searches in _wp_attached_file meta with different filename variations
-	 * 2. Falls back to searching in the guid field
+	 * This method tries multiple strategies to find the attachment with precision:
+	 * 1. Exact filename match (highest priority)
+	 * 2. Match without WordPress size suffixes (-1440x960, -scaled, -rotated, etc.)
+	 * 3. Match with directory path to avoid collisions
+	 * 4. Falls back to guid search only if above methods fail
 	 *
 	 * @since  1.0.0
 	 * @param  string $src The image source URL.
@@ -77,40 +79,96 @@ class Helper {
 	public static function find_attachment_by_filename( $src ) {
 		global $wpdb;
 
-		// Extract filename from URL.
-		$filename = basename( $src );
+		// Parse the URL to get path components.
+		$parsed_url = wp_parse_url( $src );
+		$path       = $parsed_url['path'] ?? '';
 
-		// Remove size suffixes (e.g., -1440x960, -scaled, etc.).
-		$base_filename = preg_replace( '/-\d+x\d+\./', '.', $filename );
-		$base_filename = preg_replace( '/-scaled\./', '.', $base_filename );
+		// Extract the path relative to wp-content/uploads.
+		if ( preg_match( '#/wp-content/uploads/(.+)$#', $path, $matches ) ) {
+			$relative_path = $matches[1];
+		} else {
+			return null;
+		}
 
-		// Also get the original filename without any suffix.
-		$original_filename = preg_replace( '/-[^.]*\./', '.', $filename );
+		// Extract filename and directory.
+		$filename = basename( $relative_path );
+		$dir_path = dirname( $relative_path );
 
-		// Search for attachments with matching filenames.
-		$query = $wpdb->prepare(
-			"SELECT post_id FROM {$wpdb->postmeta}
-			WHERE meta_key = '_wp_attached_file'
-			AND (meta_value LIKE %s OR meta_value LIKE %s OR meta_value LIKE %s)
-			LIMIT 1",
-			'%' . $wpdb->esc_like( $filename ),
-			'%' . $wpdb->esc_like( $base_filename ),
-			'%' . $wpdb->esc_like( $original_filename )
+		// Try 1: Exact match with full relative path (most precise).
+		$attachment_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT post_id FROM {$wpdb->postmeta}
+				WHERE meta_key = '_wp_attached_file'
+				AND meta_value = %s
+				LIMIT 1",
+				$relative_path
+			)
 		);
 
-		$attachment_id = $wpdb->get_var( $query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		if ( $attachment_id ) {
+			return intval( $attachment_id );
+		}
 
-		if ( ! $attachment_id ) {
-			// Try searching in the guid field as a last resort.
-			$query = $wpdb->prepare(
+		// Try 2: Remove only known WordPress suffixes and search with directory.
+		// Only remove: -scaled, -rotated, -NNNxNNN (size dimensions).
+		$base_filename = $filename;
+
+		// Remove dimension suffix (e.g., -1440x960).
+		$base_filename = preg_replace( '/-(\d+)x(\d+)(\.[^.]+)$/', '$3', $base_filename );
+
+		// Remove -scaled suffix.
+		$base_filename = preg_replace( '/-scaled(\.[^.]+)$/', '$1', $base_filename );
+
+		// Remove -rotated suffix.
+		$base_filename = preg_replace( '/-rotated(\.[^.]+)$/', '$1', $base_filename );
+
+		// If we modified the filename, try to find the original with directory path.
+		if ( $base_filename !== $filename ) {
+			$base_relative_path = ( '.' !== $dir_path ) ? trailingslashit( $dir_path ) . $base_filename : $base_filename;
+
+			$attachment_id = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT post_id FROM {$wpdb->postmeta}
+					WHERE meta_key = '_wp_attached_file'
+					AND meta_value = %s
+					LIMIT 1",
+					$base_relative_path
+				)
+			);
+
+			if ( $attachment_id ) {
+				return intval( $attachment_id );
+			}
+		}
+
+		// Try 3: Search within the same directory using LIKE (still safe).
+		$dir_pattern = ( '.' !== $dir_path ) ? trailingslashit( $dir_path ) : '';
+		$attachment_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT post_id FROM {$wpdb->postmeta}
+				WHERE meta_key = '_wp_attached_file'
+				AND meta_value LIKE %s
+				AND meta_value LIKE %s
+				LIMIT 1",
+				$wpdb->esc_like( $dir_pattern ) . '%',
+				'%' . $wpdb->esc_like( $base_filename )
+			)
+		);
+
+		if ( $attachment_id ) {
+			return intval( $attachment_id );
+		}
+
+		// Try 4: Last resort - search in guid (least precise, kept for backwards compatibility).
+		$attachment_id = $wpdb->get_var(
+			$wpdb->prepare(
 				"SELECT ID FROM {$wpdb->posts}
 				WHERE post_type = 'attachment'
 				AND guid LIKE %s
 				LIMIT 1",
-				'%' . $wpdb->esc_like( $original_filename )
-			);
-			$attachment_id = $wpdb->get_var( $query ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-		}
+				'%' . $wpdb->esc_like( $filename )
+			)
+		);
 
 		return $attachment_id ? intval( $attachment_id ) : null;
 	}
