@@ -71,6 +71,9 @@ class Image_Enhancement {
 	public function init() {
 		// Add support for Etch page builder - hook AFTER Etch processes images.
 		add_filter( 'render_block', array( $this, 'filter_images' ), 15, 2 );
+
+		// Disable automatic sizes attribute to have full control over responsive images.
+		add_filter( 'wp_img_tag_add_auto_sizes', '__return_false' );
 	}
 
 	/**
