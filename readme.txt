@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.0.2
+Stable tag: 1.0.5
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -91,6 +91,12 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 == Changelog ==
 
+= 1.0.5 =
+* Fixed: Substring matching bug in attachment lookup that caused wrong srcset URLs (e.g., "Lang.webp" incorrectly matching "franz-jascha-lang.webp")
+* Improved: Performance optimization - images with complete attributes are now skipped (no database queries)
+* Improved: Runtime cache prevents duplicate database lookups for the same image within a request
+* Improved: More precise attachment ID matching with exact filename comparison
+
 = 1.0.2 =
 * Fixed: Focus Position feature now initializes correctly regardless of plugin detection timing
 * Fixed: Removed dependency check that prevented Focus Position from working in some cases
@@ -111,6 +117,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.0.5 =
+Important bug fix for incorrect srcset URLs and major performance improvements. Update recommended for all users.
 
 = 1.0.2 =
 Fixes Focus Position feature initialization. Update recommended if using focus point plugins.

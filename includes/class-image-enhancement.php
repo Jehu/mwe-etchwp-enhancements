@@ -111,6 +111,19 @@ class Image_Enhancement {
 		$full_tag = $matches[0];
 		$src      = $matches[2];
 
+		// Performance optimization: Check if any attributes are actually missing.
+		// Skip expensive DB lookups for images that already have all attributes.
+		$needs_srcset = false === strpos( $full_tag, 'srcset=' );
+		$needs_sizes  = false === strpos( $full_tag, 'sizes=' );
+		$needs_width  = false === strpos( $full_tag, 'width=' );
+		$needs_height = false === strpos( $full_tag, 'height=' );
+		$needs_alt    = false === strpos( $full_tag, 'alt=' ) || preg_match( '/alt=["\']["\']/', $full_tag );
+
+		// If nothing is missing, return early (avoid DB queries).
+		if ( ! $needs_srcset && ! $needs_sizes && ! $needs_width && ! $needs_height && ! $needs_alt ) {
+			return $full_tag;
+		}
+
 		// Try to get attachment ID from src URL.
 		$attachment_id = attachment_url_to_postid( $src );
 

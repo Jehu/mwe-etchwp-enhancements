@@ -30,6 +30,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Helper {
 
 	/**
+	 * Runtime cache for attachment ID lookups.
+	 *
+	 * Prevents duplicate database queries for the same image URL within a single request.
+	 *
+	 * @since 1.0.2
+	 * @var array<string, int|null>
+	 */
+	private static $attachment_cache = array();
+
+	/**
 	 * Check if a block type should be processed for image enhancement.
 	 *
 	 * This method determines which Etch block types contain images and should
@@ -77,6 +87,11 @@ class Helper {
 	 * @return int|null    The attachment ID if found, null otherwise.
 	 */
 	public static function find_attachment_by_filename( $src ) {
+		// Check runtime cache first to avoid duplicate DB queries.
+		if ( array_key_exists( $src, self::$attachment_cache ) ) {
+			return self::$attachment_cache[ $src ];
+		}
+
 		global $wpdb;
 
 		// Parse the URL to get path components.
@@ -87,6 +102,8 @@ class Helper {
 		if ( preg_match( '#/wp-content/uploads/(.+)$#', $path, $matches ) ) {
 			$relative_path = $matches[1];
 		} else {
+			// Cache negative result.
+			self::$attachment_cache[ $src ] = null;
 			return null;
 		}
 
@@ -106,7 +123,9 @@ class Helper {
 		);
 
 		if ( $attachment_id ) {
-			return intval( $attachment_id );
+			$result = intval( $attachment_id );
+			self::$attachment_cache[ $src ] = $result;
+			return $result;
 		}
 
 		// Try 2: Remove only known WordPress suffixes and search with directory.
@@ -137,39 +156,77 @@ class Helper {
 			);
 
 			if ( $attachment_id ) {
-				return intval( $attachment_id );
+				$result = intval( $attachment_id );
+				self::$attachment_cache[ $src ] = $result;
+				return $result;
 			}
 		}
 
-		// Try 3: Search within the same directory using LIKE (still safe).
+		// Try 3: Search within the same directory using LIKE.
+		// Get all potential matches and filter in PHP to avoid false positives
+		// from substring matches (e.g., "Lang.webp" matching "franz-jascha-lang.webp").
+		// Search for both original filename AND base filename (without dimensions).
 		$dir_pattern = ( '.' !== $dir_path ) ? trailingslashit( $dir_path ) : '';
-		$attachment_id = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT post_id FROM {$wpdb->postmeta}
-				WHERE meta_key = '_wp_attached_file'
-				AND meta_value LIKE %s
-				AND meta_value LIKE %s
-				LIMIT 1",
-				$wpdb->esc_like( $dir_pattern ) . '%',
-				'%' . $wpdb->esc_like( $base_filename )
-			)
-		);
 
-		if ( $attachment_id ) {
-			return intval( $attachment_id );
+		// Build query to search for both filenames.
+		$search_filenames = array( $filename );
+		if ( $base_filename !== $filename ) {
+			$search_filenames[] = $base_filename;
+		}
+
+		foreach ( $search_filenames as $search_filename ) {
+			$potential_matches = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT post_id, meta_value FROM {$wpdb->postmeta}
+					WHERE meta_key = '_wp_attached_file'
+					AND meta_value LIKE %s
+					AND meta_value LIKE %s",
+					$wpdb->esc_like( $dir_pattern ) . '%',
+					'%' . $wpdb->esc_like( $search_filename )
+				)
+			);
+
+			// Filter results to ensure exact filename match (not substring).
+			if ( $potential_matches ) {
+				foreach ( $potential_matches as $match ) {
+					$matched_filename = basename( $match->meta_value );
+					if ( $matched_filename === $search_filename ) {
+						$result = intval( $match->post_id );
+						self::$attachment_cache[ $src ] = $result;
+						return $result;
+					}
+				}
+			}
 		}
 
 		// Try 4: Last resort - search in guid (least precise, kept for backwards compatibility).
-		$attachment_id = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT ID FROM {$wpdb->posts}
-				WHERE post_type = 'attachment'
-				AND guid LIKE %s
-				LIMIT 1",
-				'%' . $wpdb->esc_like( $filename )
-			)
-		);
+		// Get all potential matches and filter to avoid substring false positives.
+		// Search for both original filename AND base filename (without dimensions).
+		foreach ( $search_filenames as $search_filename ) {
+			$potential_guid_matches = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT ID, guid FROM {$wpdb->posts}
+					WHERE post_type = 'attachment'
+					AND guid LIKE %s",
+					'%' . $wpdb->esc_like( $search_filename )
+				)
+			);
 
-		return $attachment_id ? intval( $attachment_id ) : null;
+			// Filter results to ensure exact filename match.
+			if ( $potential_guid_matches ) {
+				foreach ( $potential_guid_matches as $match ) {
+					$guid_filename = basename( $match->guid );
+					if ( $guid_filename === $search_filename ) {
+						$result = intval( $match->ID );
+						self::$attachment_cache[ $src ] = $result;
+						return $result;
+					}
+				}
+			}
+		}
+
+		// Cache negative result (not found).
+		self::$attachment_cache[ $src ] = null;
+		return null;
 	}
 }

@@ -15,6 +15,8 @@ Automatically enhances images in Etch blocks with essential attributes:
 - **Accessibility**: Adds `alt` text from attachment metadata
 - **Performance**: Generates `sizes` attributes for optimal image loading
 - **Smart Detection**: Only adds missing attributes, never overwrites existing ones
+- **Optimized**: Early-exit for images with complete attributes (minimal overhead)
+- **Efficient**: Runtime cache prevents duplicate database queries
 
 ### 🎯 Focus Position Support
 
@@ -78,10 +80,13 @@ define( 'MWE_ETCHWP_FOCUS_POSITION', false );
 ### Image Enhancement Process
 
 1. Hooks into `render_block` filter (priority 15) after Etch processes blocks
-2. Detects `<img>` tags in `etch/block` blocks
-3. Attempts to find attachment ID from image URL
-4. Checks which attributes are missing
-5. Adds only the missing attributes without modifying existing ones
+2. Detects `<img>` tags in Etch blocks (element, component, dynamic-element, raw-html)
+3. **Performance check**: Skips images that already have all attributes (early-exit)
+4. **Cache check**: Returns cached attachment ID if image was previously processed
+5. Attempts to find attachment ID from image URL using multiple strategies
+6. Checks which attributes are missing
+7. Adds only the missing attributes without modifying existing ones
+8. **Caches result**: Stores attachment ID for future lookups within the same request
 
 ### Focus Position Process
 
@@ -207,6 +212,12 @@ This plugin follows:
 - Strict typing with `declare(strict_types=1)`
 
 ## Changelog
+
+### 1.0.5 - 2025
+- **Fixed:** Substring matching bug in attachment lookup that caused wrong srcset URLs (e.g., "Lang.webp" incorrectly matching "franz-jascha-lang.webp")
+- **Improved:** Performance optimization - images with complete attributes are now skipped (no database queries)
+- **Improved:** Runtime cache prevents duplicate database lookups for the same image within a request
+- **Improved:** More precise attachment ID matching with exact filename comparison
 
 ### 1.0.2 - 2025
 - **Fixed:** Focus Position feature now initializes correctly regardless of plugin detection timing
