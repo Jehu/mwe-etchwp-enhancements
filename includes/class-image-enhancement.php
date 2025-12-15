@@ -117,7 +117,7 @@ class Image_Enhancement {
 		$needs_sizes  = false === strpos( $full_tag, 'sizes=' );
 		$needs_width  = false === strpos( $full_tag, 'width=' );
 		$needs_height = false === strpos( $full_tag, 'height=' );
-		$needs_alt    = false === strpos( $full_tag, 'alt=' ) || preg_match( '/alt=["\']["\']/', $full_tag );
+		$needs_alt    = false === strpos( $full_tag, 'alt=' ) || preg_match( '/alt=["\']["\']/', $full_tag ) || preg_match( '/alt=["\']-["\']/', $full_tag );
 
 		// If nothing is missing, return early (avoid DB queries).
 		if ( ! $needs_srcset && ! $needs_sizes && ! $needs_width && ! $needs_height && ! $needs_alt ) {
@@ -202,13 +202,15 @@ class Image_Enhancement {
 		// - alt="-" (hyphen) = intentional decorative image, normalize to alt=""
 		// - alt="" (empty) = load alt text from media library
 		// - no alt attribute = load alt text from media library (or empty fallback)
-		$is_decorative = preg_match( '/alt=["\']-["\']/', $img_tag ); // Hyphen inside quotes.
-		$has_empty_alt = preg_match( '/alt=["\']["\']/', $img_tag );  // Empty quotes.
+		$is_decorative      = preg_match( '/alt=["\']-["\']/', $img_tag ); // Hyphen inside quotes.
+		$already_decorative = false !== strpos( $img_tag, 'data-decorative="true"' ); // Already processed.
+		$has_empty_alt      = preg_match( '/alt=["\']["\']/', $img_tag ) && ! $already_decorative; // Empty quotes (but not decorative).
 		$has_no_alt    = false === strpos( $img_tag, 'alt=' );
 
 		if ( $is_decorative ) {
 			// Normalize decorative marker (hyphen) to proper empty alt.
-			$img_tag = preg_replace( '/alt=["\']-["\']/', 'alt=""', $img_tag );
+			// Add data attribute to prevent re-processing by other filters.
+			$img_tag = preg_replace( '/alt=["\']-["\']/', 'alt="" data-decorative="true"', $img_tag );
 		} elseif ( $has_empty_alt || $has_no_alt ) {
 			// Load alt text from media library.
 			$alt_text = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
