@@ -117,7 +117,7 @@ class Image_Enhancement {
 		$needs_sizes  = false === strpos( $full_tag, 'sizes=' );
 		$needs_width  = false === strpos( $full_tag, 'width=' );
 		$needs_height = false === strpos( $full_tag, 'height=' );
-		$needs_alt    = false === strpos( $full_tag, 'alt=' );
+		$needs_alt    = false === strpos( $full_tag, 'alt=' ) || preg_match( '/alt=["\']["\']/', $full_tag );
 
 		// If nothing is missing, return early (avoid DB queries).
 		if ( ! $needs_srcset && ! $needs_sizes && ! $needs_width && ! $needs_height && ! $needs_alt ) {
@@ -198,13 +198,29 @@ class Image_Enhancement {
 			$attributes_to_add[] = 'height="' . $height . '"';
 		}
 
-		// Add alt if not present.
-		// Note: Empty alt="" is respected as intentional (decorative image).
-		if ( false === strpos( $img_tag, 'alt=' ) ) {
+		// Handle alt attribute:
+		// - alt=" " (with space) = intentional decorative image, normalize to alt=""
+		// - alt="" (empty) = load alt text from media library
+		// - no alt attribute = load alt text from media library (or empty fallback)
+		$is_decorative = preg_match( '/alt=["\'] ["\']/', $img_tag ); // Space inside quotes.
+		$has_empty_alt = preg_match( '/alt=["\']["\']/', $img_tag );  // Empty quotes.
+		$has_no_alt    = false === strpos( $img_tag, 'alt=' );
+
+		if ( $is_decorative ) {
+			// Normalize decorative marker (space) to proper empty alt.
+			$img_tag = preg_replace( '/alt=["\'] ["\']/', 'alt=""', $img_tag );
+		} elseif ( $has_empty_alt || $has_no_alt ) {
+			// Load alt text from media library.
 			$alt_text = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
 			if ( $alt_text ) {
-				$attributes_to_add[] = 'alt="' . esc_attr( $alt_text ) . '"';
-			} else {
+				if ( $has_empty_alt ) {
+					// Replace empty alt with media library alt text.
+					$img_tag = preg_replace( '/alt=["\']["\']/', 'alt="' . esc_attr( $alt_text ) . '"', $img_tag );
+				} else {
+					// Add alt attribute.
+					$attributes_to_add[] = 'alt="' . esc_attr( $alt_text ) . '"';
+				}
+			} elseif ( $has_no_alt ) {
 				// Add empty alt for accessibility if no alt text is set.
 				$attributes_to_add[] = 'alt=""';
 			}

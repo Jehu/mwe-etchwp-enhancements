@@ -13,6 +13,7 @@ Automatically enhances images in Etch blocks with essential attributes:
 - **Responsive Images**: Adds `srcset` attributes for different screen sizes
 - **Dimensions**: Extracts `width` and `height` from filename or metadata
 - **Accessibility**: Adds `alt` text from attachment metadata
+- **Decorative Images**: Use `alt=" "` (space) to mark images as decorative
 - **Performance**: Generates `sizes` attributes for optimal image loading
 - **Smart Detection**: Only adds missing attributes, never overwrites existing ones
 - **Optimized**: Early-exit for images with complete attributes (minimal overhead)
@@ -212,6 +213,11 @@ This plugin follows:
 - Strict typing with `declare(strict_types=1)`
 
 ## Changelog
+
+### 1.0.6 - 2025
+- **Fixed:** Sizes attribute was not added when srcset already existed (inverted logic)
+- **Changed:** New decorative image handling - use `alt=" "` (space) to mark images as decorative
+- **Changed:** Empty `alt=""` now loads alt text from media library (previously kept empty)
 
 ### 1.0.5 - 2025
 - **Fixed:** Substring matching bug in attachment lookup that caused wrong srcset URLs (e.g., "Lang.webp" incorrectly matching "franz-jascha-lang.webp")
