@@ -117,7 +117,7 @@ class Image_Enhancement {
 		$needs_sizes  = false === strpos( $full_tag, 'sizes=' );
 		$needs_width  = false === strpos( $full_tag, 'width=' );
 		$needs_height = false === strpos( $full_tag, 'height=' );
-		$needs_alt    = false === strpos( $full_tag, 'alt=' ) || preg_match( '/alt=["\']["\']/', $full_tag );
+		$needs_alt    = false === strpos( $full_tag, 'alt=' );
 
 		// If nothing is missing, return early (avoid DB queries).
 		if ( ! $needs_srcset && ! $needs_sizes && ! $needs_width && ! $needs_height && ! $needs_alt ) {
@@ -198,16 +198,15 @@ class Image_Enhancement {
 			$attributes_to_add[] = 'height="' . $height . '"';
 		}
 
-		// Add alt if not present or empty.
-		$alt_text = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
-		if ( $alt_text ) {
-			// Check if alt attribute is missing or empty.
-			if ( false === strpos( $img_tag, 'alt=' ) ) {
-				// No alt attribute, add it.
+		// Add alt if not present.
+		// Note: Empty alt="" is respected as intentional (decorative image).
+		if ( false === strpos( $img_tag, 'alt=' ) ) {
+			$alt_text = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
+			if ( $alt_text ) {
 				$attributes_to_add[] = 'alt="' . esc_attr( $alt_text ) . '"';
-			} elseif ( preg_match( '/alt=["\']["\']/', $img_tag ) ) {
-				// Alt attribute exists but is empty, replace it.
-				$img_tag = preg_replace( '/alt=["\']["\']/', 'alt="' . esc_attr( $alt_text ) . '"', $img_tag );
+			} else {
+				// Add empty alt for accessibility if no alt text is set.
+				$attributes_to_add[] = 'alt=""';
 			}
 		}
 
