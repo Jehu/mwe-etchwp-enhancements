@@ -199,16 +199,16 @@ class Image_Enhancement {
 		}
 
 		// Handle alt attribute:
-		// - alt=" " (with space) = intentional decorative image, normalize to alt=""
+		// - alt="-" (hyphen) = intentional decorative image, normalize to alt=""
 		// - alt="" (empty) = load alt text from media library
 		// - no alt attribute = load alt text from media library (or empty fallback)
-		$is_decorative = preg_match( '/alt=["\'] ["\']/', $img_tag ); // Space inside quotes.
+		$is_decorative = preg_match( '/alt=["\']-["\']/', $img_tag ); // Hyphen inside quotes.
 		$has_empty_alt = preg_match( '/alt=["\']["\']/', $img_tag );  // Empty quotes.
 		$has_no_alt    = false === strpos( $img_tag, 'alt=' );
 
 		if ( $is_decorative ) {
-			// Normalize decorative marker (space) to proper empty alt.
-			$img_tag = preg_replace( '/alt=["\'] ["\']/', 'alt=""', $img_tag );
+			// Normalize decorative marker (hyphen) to proper empty alt.
+			$img_tag = preg_replace( '/alt=["\']-["\']/', 'alt=""', $img_tag );
 		} elseif ( $has_empty_alt || $has_no_alt ) {
 			// Load alt text from media library.
 			$alt_text = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );

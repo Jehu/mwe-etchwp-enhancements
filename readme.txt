@@ -20,7 +20,7 @@ MWE EtchWP Enhancements is a WordPress plugin that extends the functionality of 
 * Automatically adds `srcset` attributes for responsive image sources
 * Extracts and adds `width` and `height` attributes from filename or metadata
 * Adds `alt` text from attachment metadata or title
-* Supports decorative images: Use `alt=" "` (space) to mark as decorative
+* Supports decorative images: Use `alt="-"` (hyphen) to mark as decorative
 * Generates `sizes` attributes for responsive sizing hints
 * Only adds attributes that are missing - never overwrites existing ones
 
@@ -94,7 +94,7 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 = 1.0.6 =
 * Fixed: Sizes attribute was not added when srcset already existed (inverted logic)
-* Changed: New decorative image handling - use `alt=" "` (space) to mark images as decorative
+* Changed: New decorative image handling - use `alt="-"` (hyphen) to mark images as decorative
 * Changed: Empty `alt=""` now loads alt text from media library (previously kept empty)
 
 = 1.0.5 =
@@ -125,7 +125,7 @@ No, the plugin only modifies the HTML output. Your original images and their met
 == Upgrade Notice ==
 
 = 1.0.6 =
-New decorative image handling: Use `alt=" "` (space) to mark decorative images. Empty `alt=""` now loads from media library.
+New decorative image handling: Use `alt="-"` (hyphen) to mark decorative images. Empty `alt=""` now loads from media library.
 
 = 1.0.5 =
 Important bug fix for incorrect srcset URLs and major performance improvements. Update recommended for all users.
