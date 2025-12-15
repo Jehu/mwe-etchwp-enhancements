@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -91,6 +91,11 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 == Changelog ==
 
+= 1.0.6 =
+* Fixed: Sizes attribute was not added when srcset already existed (inverted logic)
+* Fixed: Empty alt attributes (alt="") are now preserved as intentional decorative image markers
+* Improved: Editorial decisions to mark images as decorative are respected
+
 = 1.0.5 =
 * Fixed: Substring matching bug in attachment lookup that caused wrong srcset URLs (e.g., "Lang.webp" incorrectly matching "franz-jascha-lang.webp")
 * Improved: Performance optimization - images with complete attributes are now skipped (no database queries)
@@ -117,6 +122,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.0.6 =
+Fixes handling of decorative images. Empty alt attributes are no longer overwritten.
 
 = 1.0.5 =
 Important bug fix for incorrect srcset URLs and major performance improvements. Update recommended for all users.
