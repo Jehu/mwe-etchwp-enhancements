@@ -212,15 +212,18 @@ class Image_Enhancement {
 		}
 
 		// Add srcset if not present.
+		$srcset_added = false;
 		if ( false === strpos( $img_tag, 'srcset=' ) ) {
 			$srcset = wp_get_attachment_image_srcset( $attachment_id );
 			if ( $srcset ) {
 				$attributes_to_add[] = 'srcset="' . esc_attr( $srcset ) . '"';
+				$srcset_added        = true;
 			}
 		}
 
-		// Add sizes if not present (and srcset was added).
-		if ( false === strpos( $img_tag, 'sizes=' ) && false === strpos( $img_tag, 'srcset=' ) ) {
+		// Add sizes if not present and srcset exists (either already present or just added).
+		$has_srcset = ( false !== strpos( $img_tag, 'srcset=' ) ) || $srcset_added;
+		if ( false === strpos( $img_tag, 'sizes=' ) && $has_srcset ) {
 			$sizes = wp_get_attachment_image_sizes( $attachment_id );
 			if ( $sizes ) {
 				$attributes_to_add[] = 'sizes="' . esc_attr( $sizes ) . '"';
