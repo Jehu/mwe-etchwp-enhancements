@@ -214,6 +214,10 @@ This plugin follows:
 
 ## Changelog
 
+### 1.0.7 - 2025
+- **Fixed:** Decorative images were being overwritten by Focus_Position filter
+- **Added:** `data-decorative="true"` attribute to prevent re-processing
+
 ### 1.0.6 - 2025
 - **Fixed:** Sizes attribute was not added when srcset already existed (inverted logic)
 - **Changed:** New decorative image handling - use `alt="-"` (hyphen) to mark images as decorative

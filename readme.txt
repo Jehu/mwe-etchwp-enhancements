@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -92,6 +92,10 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 == Changelog ==
 
+= 1.0.7 =
+* Fixed: Decorative images were being overwritten by Focus_Position filter
+* Added: `data-decorative="true"` attribute to prevent re-processing
+
 = 1.0.6 =
 * Fixed: Sizes attribute was not added when srcset already existed (inverted logic)
 * Changed: New decorative image handling - use `alt="-"` (hyphen) to mark images as decorative
@@ -123,6 +127,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.0.7 =
+Fixes decorative image handling when Focus_Position is active. Update recommended.
 
 = 1.0.6 =
 New decorative image handling: Use `alt="-"` (hyphen) to mark decorative images. Empty `alt=""` now loads from media library.
