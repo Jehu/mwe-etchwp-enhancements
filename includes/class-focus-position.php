@@ -137,6 +137,9 @@ class Focus_Position {
 		$full_tag = $matches[0];
 		$src      = $matches[2];
 
+		// Get current post ID for override lookup.
+		$post_id = $this->get_current_post_id();
+
 		// Try to get attachment ID from src URL.
 		$attachment_id = attachment_url_to_postid( $src );
 
@@ -145,21 +148,29 @@ class Focus_Position {
 			$attachment_id = Helper::find_attachment_by_filename( $src );
 		}
 
-		if ( ! $attachment_id ) {
-			return $full_tag;
+		// Determine the image key for override lookup.
+		$image_key = $attachment_id
+			? 'attachment_' . $attachment_id
+			: Focus_Ajax::generate_url_key( $src );
+
+		// Check for per-page override first.
+		$position = null;
+		if ( $post_id ) {
+			$position = $this->get_override_position( $post_id, $image_key );
 		}
 
-		// Get focus point data from attachment metadata.
-		$metadata    = wp_get_attachment_metadata( $attachment_id );
-		$focus_point = $metadata['focus_point'] ?? null;
+		// Fall back to global focus point from Media Library.
+		if ( ! $position && $attachment_id ) {
+			$metadata    = wp_get_attachment_metadata( $attachment_id );
+			$focus_point = $metadata['focus_point'] ?? null;
 
-		if ( ! $focus_point ) {
-			return $full_tag;
+			if ( $focus_point ) {
+				// We only use desktop value now (mobile is deprecated).
+				$position = $focus_point['desktop'] ?? null;
+			}
 		}
 
-		// Determine which position to use.
-		$position = wp_is_mobile() ? $focus_point['mobile'] : $focus_point['desktop'];
-
+		// No position found, return original tag.
 		if ( ! $position || '50% 50%' === $position ) {
 			return $full_tag;
 		}
@@ -189,5 +200,42 @@ class Focus_Position {
 		}
 
 		return $full_tag;
+	}
+
+	/**
+	 * Get override position from post meta.
+	 *
+	 * @since  1.1.0
+	 * @param  int    $post_id   The post ID.
+	 * @param  string $image_key The image key.
+	 * @return string|null       The focus point position or null.
+	 */
+	private function get_override_position( int $post_id, string $image_key ): ?string {
+		if ( ! class_exists( 'MWE\\EtchWP_Enhancements\\Focus_Ajax' ) ) {
+			return null;
+		}
+
+		return Focus_Ajax::get_instance()->get_override( $post_id, $image_key );
+	}
+
+	/**
+	 * Get the current post ID.
+	 *
+	 * @since  1.1.0
+	 * @return int The post ID or 0.
+	 */
+	private function get_current_post_id(): int {
+		global $post;
+
+		if ( $post instanceof \WP_Post ) {
+			return $post->ID;
+		}
+
+		$queried = get_queried_object();
+		if ( $queried instanceof \WP_Post ) {
+			return $queried->ID;
+		}
+
+		return 0;
 	}
 }
