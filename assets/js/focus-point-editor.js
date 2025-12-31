@@ -189,9 +189,8 @@
 				const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 				const images = iframeDoc.querySelectorAll('img');
 
-				for (const img of images) {
-					await applyFocusPointToImage(img);
-				}
+				// Process all images in parallel for better performance
+				await Promise.all([...images].map(img => applyFocusPointToImage(img)));
 			} catch (e) {
 				// Iframe not accessible
 			}
@@ -522,13 +521,6 @@
 			// Cache null result to avoid repeated failed requests
 			globalFocusPointCache.set(imageUrl, null);
 			return null;
-		}
-
-		/**
-		 * Invalidate cache for a specific image URL.
-		 */
-		function invalidateCache(imageUrl) {
-			globalFocusPointCache.delete(imageUrl);
 		}
 
 		/**
