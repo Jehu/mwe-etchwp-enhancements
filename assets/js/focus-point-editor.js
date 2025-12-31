@@ -148,7 +148,52 @@
 		 * Get the currently selected image in the canvas.
 		 */
 		function getSelectedImage() {
-			// Look for selected/active image in canvas.
+			// First, try to get the image src from the panel itself
+			const panel = document.querySelector('.etch-html-block-properties-wrapper');
+			if (panel) {
+				// Find the src input field (second input usually contains the URL)
+				const inputs = panel.querySelectorAll('input.etch-input');
+				for (const input of inputs) {
+					if (input.value && input.value.includes('/wp-content/uploads/')) {
+						// Create a virtual image object with the src
+						return { src: input.value, fromPanel: true };
+					}
+				}
+			}
+			
+			// Try to find in iframe
+			const iframe = document.querySelector('iframe[title="Etch Iframe"]');
+			if (iframe) {
+				try {
+					const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+					const selectors = [
+						'.etch-selected img',
+						'[data-etch-selected] img',
+						'.etch-builder-block--selected img',
+						'img.etch-builder-block--selected'
+					];
+					
+					for (const selector of selectors) {
+						const img = iframeDoc.querySelector(selector);
+						if (img) return img;
+					}
+					
+					// Fallback: get any image that matches the panel's src
+					if (panel) {
+						const inputs = panel.querySelectorAll('input.etch-input');
+						for (const input of inputs) {
+							if (input.value && input.value.includes('/wp-content/uploads/')) {
+								const img = iframeDoc.querySelector(`img[src="${input.value}"]`);
+								if (img) return img;
+							}
+						}
+					}
+				} catch (e) {
+					console.warn('MWE Focus Point: Cannot access iframe', e);
+				}
+			}
+
+			// Fallback: look in main document
 			const selectors = [
 				'.etch-selected img',
 				'[data-etch-selected] img',
@@ -160,12 +205,6 @@
 			for (const selector of selectors) {
 				const img = document.querySelector(selector);
 				if (img) return img;
-			}
-
-			// Fallback: find any focused/active image.
-			const activeElement = document.activeElement;
-			if (activeElement && activeElement.tagName === 'IMG') {
-				return activeElement;
 			}
 
 			return null;
