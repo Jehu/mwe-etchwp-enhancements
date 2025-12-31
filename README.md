@@ -24,7 +24,9 @@ Automatically enhances images in Etch blocks with essential attributes:
 Integrates with focus point plugins to control image focal points:
 
 - Applies CSS `object-position` based on focus point data
-- Supports separate desktop and mobile focus positions
+- **Per-page overrides**: Set custom focus points in Etch editor that override global Media Library values
+- **Visual editor**: Click-to-set focus point UI in Etch's element settings panel
+- **Dynamic Data integration**: Access focus points via `{this.image.focusPoint}` in Etch templates
 - Compatible with:
   - [Image Background Focus Position](https://www.wordpress-focalpoint.com/)
   - [Media Focus Point](https://wordpress.org/plugins/media-focus-point/)
@@ -93,9 +95,24 @@ define( 'MWE_ETCHWP_FOCUS_POSITION', false );
 
 1. Reads focus point data from compatible plugins
 2. Adds data to attachment metadata via `wp_get_attachment_metadata` filter
-3. Applies CSS `object-position` during block rendering
-4. Determines desktop vs mobile position based on device detection
+3. Checks for per-page overrides stored in post meta
+4. Applies CSS `object-position` during block rendering (override > global > default)
 5. Automatically applies image enhancements as well
+
+### Per-Page Focus Point Overrides
+
+Focus points can be customized per-page in the Etch editor:
+
+1. Select an image in the Etch canvas
+2. Find the "Focus Point" section in Element Settings
+3. Click on the preview image to set the focus point
+4. The override is saved automatically for this page only
+5. Click "Use Global" to remove the override and use the Media Library value
+
+**Priority order:**
+1. Per-page override (set in Etch editor)
+2. Media Library focus point (global)
+3. Default: `50% 50%` (center)
 
 ## Developer Documentation
 
@@ -177,6 +194,9 @@ MWE\EtchWP_Enhancements\
 ├── Plugin                    # Main plugin class with dependency checks
 ├── Image_Enhancement         # Handles image attribute enhancement
 ├── Focus_Position            # Handles focus point integration
+├── Focus_Dynamic_Data        # Exposes focus points in Etch Dynamic Data
+├── Focus_Ajax                # AJAX handlers for focus point overrides
+├── Focus_Editor_UI           # Loads focus point editor UI in Etch canvas
 └── Helper                    # Shared utility functions
 ```
 
@@ -192,16 +212,24 @@ All classes use the Singleton pattern and are autoloaded.
 
 ```
 mwe-etchwp-enhancements/
-├── mwe-etchwp-enhancements.php    # Main plugin file
-├── README.md                       # This file
-├── readme.txt                      # WordPress.org readme
+├── mwe-etchwp-enhancements.php       # Main plugin file
+├── README.md                          # This file
+├── readme.txt                         # WordPress.org readme
 ├── includes/
-│   ├── class-plugin.php           # Main plugin class
-│   ├── class-image-enhancement.php # Image enhancement feature
-│   ├── class-focus-position.php   # Focus position feature
-│   └── class-helper.php           # Shared utilities
+│   ├── class-plugin.php              # Main plugin class
+│   ├── class-image-enhancement.php   # Image enhancement feature
+│   ├── class-focus-position.php      # Focus position feature
+│   ├── class-focus-dynamic-data.php  # Etch Dynamic Data integration
+│   ├── class-focus-ajax.php          # AJAX handlers for overrides
+│   ├── class-focus-editor-ui.php     # Editor UI asset loading
+│   └── class-helper.php              # Shared utilities
+├── assets/
+│   ├── js/
+│   │   └── focus-point-editor.js     # Visual focus point editor
+│   └── css/
+│       └── focus-point-editor.css    # Editor UI styles
 └── languages/
-    └── mwe-etchwp-enhancements.pot # Translation template
+    └── mwe-etchwp-enhancements.pot   # Translation template
 ```
 
 ## WordPress Coding Standards
@@ -213,6 +241,15 @@ This plugin follows:
 - Strict typing with `declare(strict_types=1)`
 
 ## Changelog
+
+### 1.1.0 - 2025
+- **Added:** Per-page focus point overrides in Etch editor
+- **Added:** Visual focus point editor UI with click-to-set functionality
+- **Added:** Dynamic Data integration (`{this.image.focusPoint}` in Etch templates)
+- **Added:** AJAX endpoints for saving/retrieving focus point overrides
+- **Added:** Focus overrides stored in post meta (`_mwe_etchwp_enhancements_focus_overrides`)
+- **Added:** New classes: `Focus_Dynamic_Data`, `Focus_Ajax`, `Focus_Editor_UI`
+- **Changed:** Focus points now use priority: per-page override > Media Library > default
 
 ### 1.0.7 - 2025
 - **Fixed:** Decorative images were being overwritten by Focus_Position filter

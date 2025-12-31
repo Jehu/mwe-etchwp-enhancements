@@ -1,0 +1,184 @@
+/**
+ * Focus Point Editor Styles
+ *
+ * Styles for the visual focus point editor in Etch canvas.
+ *
+ * @package MWE_EtchWP_Enhancements
+ * @since   1.1.0
+ */
+
+/* Container */
+.mwe-focus-point-container {
+	padding: 12px;
+	margin: 8px 0;
+	background: var(--e-base-light, #2a2a2e);
+	border-radius: var(--e-border-radius, 6px);
+	border: 1px solid var(--e-border-color, #3a3a3e);
+}
+
+/* Header */
+.mwe-focus-point-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.mwe-focus-point-title {
+	font-size: var(--e-font-size-m, 12px);
+	font-weight: 600;
+	color: var(--e-foreground-color, #e0e0e4);
+}
+
+.mwe-focus-point-status {
+	font-size: var(--e-font-size-s, 11px);
+	padding: 2px 6px;
+	border-radius: 3px;
+}
+
+.mwe-focus-point-status.saving {
+	color: var(--e-warning, #f2c960);
+}
+
+.mwe-focus-point-status.saved {
+	color: var(--e-success, #67d992);
+}
+
+.mwe-focus-point-status.error {
+	color: var(--e-danger, #f26060);
+}
+
+/* Preview Area */
+.mwe-focus-point-preview {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 10;
+	background: var(--e-base-dark, #1a1a1e);
+	border-radius: 4px;
+	overflow: hidden;
+	cursor: crosshair;
+	margin-bottom: 10px;
+}
+
+.mwe-focus-point-preview-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	pointer-events: none;
+}
+
+/* Focus Point Marker */
+.mwe-focus-point-marker {
+	position: absolute;
+	width: 20px;
+	height: 20px;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	z-index: 10;
+}
+
+.mwe-focus-point-marker::before,
+.mwe-focus-point-marker::after {
+	content: '';
+	position: absolute;
+	background: var(--e-primary, #6dd5d5);
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+/* Horizontal line */
+.mwe-focus-point-marker::before {
+	width: 20px;
+	height: 2px;
+	top: 50%;
+	left: 0;
+	transform: translateY(-50%);
+}
+
+/* Vertical line */
+.mwe-focus-point-marker::after {
+	width: 2px;
+	height: 20px;
+	left: 50%;
+	top: 0;
+	transform: translateX(-50%);
+}
+
+/* Center dot */
+.mwe-focus-point-marker::before {
+	box-shadow:
+		0 0 0 1px rgba(0, 0, 0, 0.5),
+		9px 0 0 0 var(--e-primary, #6dd5d5),
+		-9px 0 0 0 var(--e-primary, #6dd5d5);
+}
+
+/* Info Area */
+.mwe-focus-point-info {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px;
+	font-size: var(--e-font-size-s, 11px);
+}
+
+.mwe-focus-point-position {
+	font-family: var(--e-font-code, monospace);
+	color: var(--e-foreground-color, #e0e0e4);
+	background: var(--e-base-dark, #1a1a1e);
+	padding: 3px 8px;
+	border-radius: 3px;
+}
+
+.mwe-focus-point-type {
+	color: var(--e-foreground-color-muted, #a0a0a4);
+	font-style: italic;
+}
+
+/* Actions */
+.mwe-focus-point-actions {
+	display: flex;
+	gap: 8px;
+}
+
+.mwe-focus-point-button {
+	flex: 1;
+	padding: 6px 12px;
+	font-size: var(--e-font-size-s, 11px);
+	font-weight: 500;
+	border: 1px solid var(--e-border-color, #3a3a3e);
+	border-radius: 4px;
+	background: var(--e-base, #26262a);
+	color: var(--e-foreground-color, #e0e0e4);
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.mwe-focus-point-button:hover:not(:disabled) {
+	background: var(--e-base-light, #2a2a2e);
+	border-color: var(--e-primary, #6dd5d5);
+}
+
+.mwe-focus-point-button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.mwe-focus-point-reset {
+	background: transparent;
+}
+
+/* Hover effect on preview */
+.mwe-focus-point-preview:hover .mwe-focus-point-marker::before,
+.mwe-focus-point-preview:hover .mwe-focus-point-marker::after {
+	background: var(--e-selected, #469fea);
+}
+
+/* Animation for marker on click */
+@keyframes mwe-focus-pulse {
+	0% { transform: translate(-50%, -50%) scale(1); }
+	50% { transform: translate(-50%, -50%) scale(1.3); }
+	100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+.mwe-focus-point-marker.pulse {
+	animation: mwe-focus-pulse 0.3s ease;
+}
