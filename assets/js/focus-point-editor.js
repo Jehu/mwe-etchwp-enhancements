@@ -115,6 +115,9 @@
 				   document.querySelector('[data-etch-builder]') !== null;
 		}
 
+		// Track the current image src to detect changes
+		let currentImageSrc = null;
+
 		/**
 		 * Check if an image settings panel is open and inject our UI.
 		 */
@@ -122,24 +125,46 @@
 			// Look for Etch's HTML block properties wrapper (the actual settings container for images)
 			const panel = document.querySelector('.etch-html-block-properties-wrapper');
 			
-			if (!panel) return;
+			if (!panel) {
+				// No panel, remove any existing UI and reset tracking
+				removeExistingFocusUI();
+				currentImageSrc = null;
+				return;
+			}
 
 			// Verify this is for an image by checking for img-specific fields
 			const tagInput = panel.querySelector('input[value="img"], input[placeholder*="tag"]');
 			const srcButton = panel.querySelector('button[class*="media"]');
 			
 			// Must have both tag input and src/media button to be an image panel
-			if (!tagInput && !srcButton) return;
-
-			// Check if we already injected our UI.
-			if (panel.querySelector('.mwe-focus-point-container')) return;
+			if (!tagInput && !srcButton) {
+				removeExistingFocusUI();
+				currentImageSrc = null;
+				return;
+			}
 
 			// Get the currently selected image.
 			const selectedImage = getSelectedImage();
 			if (!selectedImage) return;
 
-			// Inject our focus point UI.
-			injectFocusPointUI(panel, selectedImage);
+			// Check if the image changed
+			const newImageSrc = selectedImage.src;
+			if (newImageSrc !== currentImageSrc) {
+				// Image changed - remove old UI and create new one
+				removeExistingFocusUI();
+				currentImageSrc = newImageSrc;
+				injectFocusPointUI(panel, selectedImage);
+			}
+		}
+
+		/**
+		 * Remove existing focus point UI.
+		 */
+		function removeExistingFocusUI() {
+			const existingUI = document.querySelector('.mwe-focus-point-container');
+			if (existingUI) {
+				existingUI.remove();
+			}
 		}
 
 
