@@ -253,11 +253,17 @@
 		 * Inject the focus point UI into the panel.
 		 */
 		async function injectFocusPointUI(panel, image) {
-			const imageKey = getImageKey(image);
-			const currentOverride = overridesCache[imageKey] || null;
+			// Fetch global focus point and attachment ID from server
+			const globalData = await fetchGlobalFocusPoint(image.src);
+			const globalValue = globalData?.focusPoint || null;
+			const attachmentId = globalData?.attachmentId || null;
 			
-			// Fetch global focus point from server
-			const globalValue = await fetchGlobalFocusPoint(image.src);
+			// Use attachment_id for WordPress images, URL hash for external
+			const imageKey = attachmentId 
+				? `attachment_${attachmentId}` 
+				: 'url_' + md5(image.src);
+			
+			const currentOverride = overridesCache[imageKey] || null;
 
 			// Create container.
 			const container = document.createElement('div');
@@ -387,7 +393,8 @@
 		}
 
 		/**
-		 * Fetch global focus point from server via AJAX.
+		 * Fetch global focus point and attachment ID from server via AJAX.
+		 * Returns { focusPoint, attachmentId } or null.
 		 */
 		async function fetchGlobalFocusPoint(imageUrl) {
 			if (!imageUrl) return null;
@@ -398,8 +405,11 @@
 				);
 				const data = await response.json();
 				
-				if (data.success && data.data.focus_point) {
-					return data.data.focus_point;
+				if (data.success) {
+					return {
+						focusPoint: data.data.focus_point || null,
+						attachmentId: data.data.attachment_id || null
+					};
 				}
 			} catch (error) {
 				console.warn('MWE Focus Point: Failed to fetch global focus point', error);
