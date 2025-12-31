@@ -328,9 +328,14 @@
 		 * Get the image key for storage.
 		 */
 		function getImageKey(image) {
+			// Handle virtual image object from panel
+			if (image.fromPanel) {
+				return 'url_' + hashCode(image.src);
+			}
+			
 			// Try to get attachment ID from data attribute or class.
-			const attachmentId = image.dataset.attachmentId ||
-								 image.className.match(/wp-image-(\d+)/)?.[1];
+			const attachmentId = image.dataset?.attachmentId ||
+								 (image.className || '').match(/wp-image-(\d+)/)?.[1];
 
 			if (attachmentId) {
 				return `attachment_${attachmentId}`;
@@ -344,12 +349,17 @@
 		 * Get global focus point from image data.
 		 */
 		function getGlobalFocusPoint(image) {
+			// Handle virtual image object from panel
+			if (image.fromPanel) {
+				return null; // No global focus point available from panel
+			}
+			
 			// Check for inline style.
-			const style = image.style.objectPosition;
+			const style = image.style?.objectPosition;
 			if (style) return style;
 
 			// Check for data attribute.
-			return image.dataset.focusPoint || null;
+			return image.dataset?.focusPoint || null;
 		}
 
 		/**
