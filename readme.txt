@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.0.7
+Stable tag: 1.1.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -92,6 +92,14 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 == Changelog ==
 
+= 1.1.0 =
+* Added: Per-page focus point override feature for Etch editor
+* Added: Visual click-to-set UI in Element Settings panel
+* Added: Real-time preview of focus point changes in Etch iframe
+* Added: Support for both WordPress Media Library images and external URLs
+* Added: PHPUnit test infrastructure with 31 tests
+* Improved: Parallel image processing for better performance
+
 = 1.0.7 =
 * Fixed: Decorative images were being overwritten by Focus_Position filter
 * Added: `data-decorative="true"` attribute to prevent re-processing
@@ -127,6 +135,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+New feature: Per-page focus point overrides in Etch editor. Click on image preview to set custom focus points per page.
 
 = 1.0.7 =
 Fixes decorative image handling when Focus_Position is active. Update recommended.
