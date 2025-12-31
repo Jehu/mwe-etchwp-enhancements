@@ -33,7 +33,7 @@ Integrates with focus point plugins to control image focal points:
 
 #### Visual Focus Point Editor in Etch
 
-![Focus Point Editor in Etch](assets/focus-point-feature.webp)
+<img src="assets/focus-point-feature.webp" alt="Focus Point Editor in Etch" width="340" height="339">
 
 The Focus Point Editor appears automatically when you select an image in the Etch canvas. It provides:
 
