@@ -132,12 +132,11 @@
 				return;
 			}
 
-			// Verify this is for an image by checking for img-specific fields
-			const tagInput = panel.querySelector('input[value="img"], input[placeholder*="tag"]');
-			const srcButton = panel.querySelector('button[class*="media"]');
+			// Verify this is for an image by checking if tag value is 'img'
+			const tagInput = panel.querySelector('input.etch-combobox__input, input[placeholder="Enter tag"]');
+			const isImageTag = tagInput && tagInput.value.toLowerCase() === 'img';
 			
-			// Must have both tag input and src/media button to be an image panel
-			if (!tagInput && !srcButton) {
+			if (!isImageTag) {
 				removeExistingFocusUI();
 				currentImageSrc = null;
 				return;
@@ -145,7 +144,11 @@
 
 			// Get the currently selected image.
 			const selectedImage = getSelectedImage();
-			if (!selectedImage) return;
+			if (!selectedImage) {
+				removeExistingFocusUI();
+				currentImageSrc = null;
+				return;
+			}
 
 			// Check if the image changed
 			const newImageSrc = selectedImage.src;
@@ -170,17 +173,39 @@
 
 
 		/**
+		 * Check if a string looks like an image URL.
+		 */
+		function isImageUrl(str) {
+			if (!str) return false;
+			// Check for common image patterns
+			return str.startsWith('http://') || 
+				   str.startsWith('https://') || 
+				   str.startsWith('/wp-content/uploads/');
+		}
+
+		/**
 		 * Get the currently selected image in the canvas.
 		 */
 		function getSelectedImage() {
 			// First, try to get the image src from the panel itself
 			const panel = document.querySelector('.etch-html-block-properties-wrapper');
 			if (panel) {
-				// Find the src input field (second input usually contains the URL)
+				// Find the src input field - look for input after 'src' label
+				const labels = panel.querySelectorAll('label.etch-label');
+				for (const label of labels) {
+					if (label.textContent.trim().toLowerCase() === 'src') {
+						// Get the next input after this label
+						const nextInput = label.querySelector('input.etch-input');
+						if (nextInput && isImageUrl(nextInput.value)) {
+							return { src: nextInput.value, fromPanel: true };
+						}
+					}
+				}
+				
+				// Fallback: check all inputs for image URLs
 				const inputs = panel.querySelectorAll('input.etch-input');
 				for (const input of inputs) {
-					if (input.value && input.value.includes('/wp-content/uploads/')) {
-						// Create a virtual image object with the src
+					if (isImageUrl(input.value)) {
 						return { src: input.value, fromPanel: true };
 					}
 				}
@@ -201,17 +226,6 @@
 					for (const selector of selectors) {
 						const img = iframeDoc.querySelector(selector);
 						if (img) return img;
-					}
-					
-					// Fallback: get any image that matches the panel's src
-					if (panel) {
-						const inputs = panel.querySelectorAll('input.etch-input');
-						for (const input of inputs) {
-							if (input.value && input.value.includes('/wp-content/uploads/')) {
-								const img = iframeDoc.querySelector(`img[src="${input.value}"]`);
-								if (img) return img;
-							}
-						}
 					}
 				} catch (e) {
 					console.warn('MWE Focus Point: Cannot access iframe', e);
