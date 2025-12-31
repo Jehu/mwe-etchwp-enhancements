@@ -31,6 +31,18 @@ Integrates with focus point plugins to control image focal points:
   - [Image Background Focus Position](https://www.wordpress-focalpoint.com/)
   - [Media Focus Point](https://wordpress.org/plugins/media-focus-point/)
 
+#### Visual Focus Point Editor in Etch
+
+![Focus Point Editor in Etch](assets/focus-point-feature.webp)
+
+The Focus Point Editor appears automatically when you select an image in the Etch canvas. It provides:
+
+- **Interactive Preview**: Click anywhere on the image thumbnail to set the focus point
+- **Visual Marker**: A crosshair marker shows the current focus position
+- **Position Display**: Shows exact percentage values (e.g., "30.5% 45.2%")
+- **Override Indicator**: Clearly shows whether you're using a page-specific override or the global Media Library value
+- **Reset Button**: One click to remove the override and revert to the global focus point
+
 ## Requirements
 
 ### Required
