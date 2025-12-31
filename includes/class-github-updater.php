@@ -22,11 +22,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Load the plugin update checker library.
-require_once MWE_ETCHWP_PLUGIN_DIR . 'vendor/plugin-update-checker/plugin-update-checker.php';
-
-use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
-
 /**
  * GitHub Updater class.
  *
@@ -101,7 +96,10 @@ class GitHub_Updater {
 	 * @return void
 	 */
 	private function setup_update_checker(): void {
-		$this->update_checker = PucFactory::buildUpdateChecker(
+		// Load the plugin update checker library.
+		require_once MWE_ETCHWP_PLUGIN_DIR . 'vendor/plugin-update-checker/plugin-update-checker.php';
+
+		$this->update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
 			self::GITHUB_REPO,
 			MWE_ETCHWP_PLUGIN_FILE,
 			'mwe-etchwp-enhancements'
