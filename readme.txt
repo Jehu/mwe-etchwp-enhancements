@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -91,6 +91,10 @@ No, the plugin processes images during block rendering with minimal overhead. It
 No, the plugin only modifies the HTML output. Your original images and their metadata remain unchanged.
 
 == Changelog ==
+
+= 1.2.0 =
+* Added: Automatic updates from GitHub Releases
+* Added: One-click upgrade support via WordPress admin
 
 = 1.1.0 =
 * Added: Per-page focus point override feature for Etch editor
