@@ -42,14 +42,19 @@
 		 * Initialize the focus point editor.
 		 */
 		function init() {
-			// Load existing overrides.
-			loadOverrides();
+			// Load existing overrides, then apply to iframe.
+			loadOverrides().then(() => {
+				applyFocusPointsToIframe();
+			});
 
 			// Watch for panel changes.
 			observePanelChanges();
 
 			// Listen for image selection in canvas.
 			observeCanvasSelection();
+
+			// Watch iframe for image changes.
+			observeIframeChanges();
 		}
 
 		/**
@@ -104,6 +109,87 @@
 					setTimeout(checkForImagePanel, 100);
 				}
 			});
+		}
+
+		/**
+		 * Observe iframe for image changes and apply focus points.
+		 */
+		function observeIframeChanges() {
+			const checkIframe = () => {
+				const iframe = document.querySelector('iframe[title="Etch Iframe"]');
+				if (!iframe) {
+					setTimeout(checkIframe, 500);
+					return;
+				}
+
+				try {
+					const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+					
+					// Apply focus points initially
+					applyFocusPointsToIframe();
+
+					// Observe iframe for changes
+					const observer = new MutationObserver(() => {
+						applyFocusPointsToIframe();
+					});
+
+					observer.observe(iframeDoc.body, {
+						childList: true,
+						subtree: true,
+						attributes: true,
+						attributeFilter: ['src']
+					});
+				} catch (e) {
+					// Iframe not ready, try again
+					setTimeout(checkIframe, 500);
+				}
+			};
+
+			checkIframe();
+		}
+
+		/**
+		 * Apply focus points to all images in the Etch iframe.
+		 */
+		async function applyFocusPointsToIframe() {
+			const iframe = document.querySelector('iframe[title="Etch Iframe"]');
+			if (!iframe) return;
+
+			try {
+				const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+				const images = iframeDoc.querySelectorAll('img');
+
+				for (const img of images) {
+					await applyFocusPointToImage(img);
+				}
+			} catch (e) {
+				// Iframe not accessible
+			}
+		}
+
+		/**
+		 * Apply focus point to a single image.
+		 */
+		async function applyFocusPointToImage(img) {
+			const src = img.src;
+			if (!src || src.includes('data:')) return;
+
+			// Fetch global data (includes attachment_id)
+			const globalData = await fetchGlobalFocusPoint(src);
+			const attachmentId = globalData?.attachmentId || null;
+			const globalFocusPoint = globalData?.focusPoint || null;
+
+			// Determine image key
+			const imageKey = attachmentId 
+				? `attachment_${attachmentId}` 
+				: 'url_' + md5(src);
+
+			// Check for override first, then global
+			const focusPoint = overridesCache[imageKey] || globalFocusPoint;
+
+			if (focusPoint && focusPoint !== '50% 50%') {
+				img.style.objectPosition = focusPoint;
+			}
 		}
 
 		/**
@@ -469,6 +555,9 @@
 					statusElement.textContent = i18n.saved;
 					statusElement.className = 'mwe-focus-point-status saved';
 
+					// Apply to iframe immediately
+					applyFocusPointsToIframe();
+
 					setTimeout(() => {
 						statusElement.textContent = '';
 						statusElement.className = 'mwe-focus-point-status';
@@ -510,6 +599,9 @@
 					delete overridesCache[imageKey];
 					statusElement.textContent = i18n.saved;
 					statusElement.className = 'mwe-focus-point-status saved';
+
+					// Apply to iframe immediately (will use global or default)
+					applyFocusPointsToIframe();
 
 					setTimeout(() => {
 						statusElement.textContent = '';
