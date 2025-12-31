@@ -124,6 +124,10 @@ class Plugin {
 	 * @return void
 	 */
 	public function init() {
+		// Initialize GitHub Updater first - always runs regardless of dependencies.
+		// This ensures users receive updates even if Etch is temporarily deactivated.
+		$this->init_updater();
+
 		// Check dependencies.
 		if ( ! $this->check_dependencies() ) {
 			return;
@@ -188,7 +192,18 @@ class Plugin {
 			$this->focus_editor_ui->init();
 		}
 
-		// Initialize GitHub Updater for automatic updates.
+	}
+
+	/**
+	 * Initialize the GitHub Updater.
+	 *
+	 * Runs independently of other dependencies to ensure updates
+	 * are always available, even when Etch is deactivated.
+	 *
+	 * @since  1.2.0
+	 * @return void
+	 */
+	private function init_updater(): void {
 		$this->github_updater = GitHub_Updater::get_instance();
 		$this->github_updater->init();
 	}
