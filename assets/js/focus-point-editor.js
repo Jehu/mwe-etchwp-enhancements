@@ -119,27 +119,17 @@
 		 * Check if an image settings panel is open and inject our UI.
 		 */
 		function checkForImagePanel() {
-			// Look for Etch's element settings panel.
-			// These selectors may need adjustment based on Etch's actual DOM structure.
-			const panelSelectors = [
-				'[data-panel="element-settings"]',
-				'.etch-element-settings',
-				'.etch-inspector-panel',
-				'[class*="element-settings"]',
-				'[class*="ElementSettings"]'
-			];
-
-			let panel = null;
-			for (const selector of panelSelectors) {
-				panel = document.querySelector(selector);
-				if (panel) break;
-			}
-
+			// Look for Etch's HTML block properties wrapper (the actual settings container for images)
+			const panel = document.querySelector('.etch-html-block-properties-wrapper');
+			
 			if (!panel) return;
 
-			// Check if this is for an image element.
-			const isImagePanel = checkIfImagePanel(panel);
-			if (!isImagePanel) return;
+			// Verify this is for an image by checking for img-specific fields
+			const tagInput = panel.querySelector('input[value="img"], input[placeholder*="tag"]');
+			const srcButton = panel.querySelector('button[class*="media"]');
+			
+			// Must have both tag input and src/media button to be an image panel
+			if (!tagInput && !srcButton) return;
 
 			// Check if we already injected our UI.
 			if (panel.querySelector('.mwe-focus-point-container')) return;
@@ -152,27 +142,7 @@
 			injectFocusPointUI(panel, selectedImage);
 		}
 
-		/**
-		 * Check if the panel is for an image element.
-		 */
-		function checkIfImagePanel(panel) {
-			// Look for indicators that this is an image panel.
-			const panelText = panel.textContent.toLowerCase();
-			const hasImageIndicator = panelText.includes('img') ||
-									  panelText.includes('image') ||
-									  panel.querySelector('[data-element-type="img"]') !== null;
 
-			// Also check panel header/title.
-			const header = panel.querySelector('h2, h3, [class*="header"], [class*="title"]');
-			if (header) {
-				const headerText = header.textContent.toLowerCase();
-				if (headerText.includes('img') || headerText.includes('image')) {
-					return true;
-				}
-			}
-
-			return hasImageIndicator;
-		}
 
 		/**
 		 * Get the currently selected image in the canvas.
@@ -310,19 +280,9 @@
 		 * Find the best insertion point in the panel.
 		 */
 		function findInsertionPoint(panel) {
-			// Try to find a good spot after the main content but before other controls.
-			const candidates = [
-				panel.querySelector('[class*="attributes"]'),
-				panel.querySelector('[class*="styles"]'),
-				panel.querySelector('[class*="settings"]'),
-				panel.querySelector('div:first-child')
-			];
-
-			for (const candidate of candidates) {
-				if (candidate) return candidate;
-			}
-
-			return null;
+			// Find the last label (after src, alt, class fields) to insert after it
+			const labels = panel.querySelectorAll('label.etch-label');
+			return labels.length > 0 ? labels[labels.length - 1] : panel.firstElementChild;
 		}
 
 		/**
