@@ -160,14 +160,10 @@ class Focus_Position {
 		}
 
 		// Fall back to global focus point from Media Library.
+		// Use get_post_meta directly to avoid potential recursion through
+		// wp_get_attachment_metadata filter.
 		if ( ! $position && $attachment_id ) {
-			$metadata    = wp_get_attachment_metadata( $attachment_id );
-			$focus_point = $metadata['focus_point'] ?? null;
-
-			if ( $focus_point ) {
-				// We only use desktop value now (mobile is deprecated).
-				$position = $focus_point['desktop'] ?? null;
-			}
+			$position = get_post_meta( $attachment_id, 'bg_pos_desktop', true );
 		}
 
 		// No position found, return original tag.

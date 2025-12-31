@@ -38,6 +38,9 @@
 		// Cache for focus point overrides.
 		let overridesCache = {};
 
+		// Cache for global focus point AJAX responses (by URL).
+		const globalFocusPointCache = new Map();
+
 		/**
 		 * Initialize the focus point editor.
 		 */
@@ -128,9 +131,36 @@
 					// Apply focus points initially
 					applyFocusPointsToIframe();
 
-					// Observe iframe for changes
-					const observer = new MutationObserver(() => {
-						applyFocusPointsToIframe();
+					// Observe iframe for image-related changes only
+					const observer = new MutationObserver((mutations) => {
+						let hasImageChange = false;
+						
+						for (const mutation of mutations) {
+							// Check for src attribute changes on img elements
+							if (mutation.type === 'attributes' && 
+								mutation.attributeName === 'src' && 
+								mutation.target.tagName === 'IMG') {
+								hasImageChange = true;
+								break;
+							}
+							
+							// Check for added img elements
+							if (mutation.type === 'childList') {
+								for (const node of mutation.addedNodes) {
+									if (node.tagName === 'IMG' || 
+										(node.querySelectorAll && node.querySelectorAll('img').length > 0)) {
+										hasImageChange = true;
+										break;
+									}
+								}
+							}
+							
+							if (hasImageChange) break;
+						}
+						
+						if (hasImageChange) {
+							applyFocusPointsToIframe();
+						}
 					});
 
 					observer.observe(iframeDoc.body, {
@@ -458,32 +488,17 @@
 		}
 
 		/**
-		 * Get the image key for storage.
-		 */
-		function getImageKey(image) {
-			// Handle virtual image object from panel
-			if (image.fromPanel) {
-				return 'url_' + md5(image.src);
-			}
-			
-			// Try to get attachment ID from data attribute or class.
-			const attachmentId = image.dataset?.attachmentId ||
-								 (image.className || '').match(/wp-image-(\d+)/)?.[1];
-
-			if (attachmentId) {
-				return `attachment_${attachmentId}`;
-			}
-
-			// Fall back to URL hash.
-			return 'url_' + md5(image.src);
-		}
-
-		/**
 		 * Fetch global focus point and attachment ID from server via AJAX.
 		 * Returns { focusPoint, attachmentId } or null.
+		 * Results are cached by URL.
 		 */
 		async function fetchGlobalFocusPoint(imageUrl) {
 			if (!imageUrl) return null;
+
+			// Check cache first
+			if (globalFocusPointCache.has(imageUrl)) {
+				return globalFocusPointCache.get(imageUrl);
+			}
 			
 			try {
 				const response = await fetch(
@@ -492,16 +507,28 @@
 				const data = await response.json();
 				
 				if (data.success) {
-					return {
+					const result = {
 						focusPoint: data.data.focus_point || null,
 						attachmentId: data.data.attachment_id || null
 					};
+					// Cache the result
+					globalFocusPointCache.set(imageUrl, result);
+					return result;
 				}
 			} catch (error) {
 				console.warn('MWE Focus Point: Failed to fetch global focus point', error);
 			}
 			
+			// Cache null result to avoid repeated failed requests
+			globalFocusPointCache.set(imageUrl, null);
 			return null;
+		}
+
+		/**
+		 * Invalidate cache for a specific image URL.
+		 */
+		function invalidateCache(imageUrl) {
+			globalFocusPointCache.delete(imageUrl);
 		}
 
 		/**

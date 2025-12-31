@@ -143,6 +143,11 @@ class Focus_Ajax {
 			wp_send_json_error( array( 'message' => 'Invalid nonce' ), 403 );
 		}
 
+		// Check permissions.
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_send_json_error( array( 'message' => 'Insufficient permissions' ), 403 );
+		}
+
 		$post_id   = isset( $_GET['post_id'] ) ? absint( $_GET['post_id'] ) : 0;
 		$image_key = isset( $_GET['image_key'] ) ? sanitize_text_field( wp_unslash( $_GET['image_key'] ) ) : '';
 
@@ -208,6 +213,11 @@ class Focus_Ajax {
 			wp_send_json_error( array( 'message' => 'Invalid nonce' ), 403 );
 		}
 
+		// Check permissions.
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_send_json_error( array( 'message' => 'Insufficient permissions' ), 403 );
+		}
+
 		$post_id = isset( $_GET['post_id'] ) ? absint( $_GET['post_id'] ) : 0;
 
 		if ( ! $post_id ) {
@@ -267,6 +277,11 @@ class Focus_Ajax {
 			wp_send_json_error( array( 'message' => 'Invalid nonce' ), 403 );
 		}
 
+		// Check permissions.
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_send_json_error( array( 'message' => 'Insufficient permissions' ), 403 );
+		}
+
 		$image_url = isset( $_GET['image_url'] ) ? esc_url_raw( wp_unslash( $_GET['image_url'] ) ) : '';
 
 		if ( ! $image_url ) {
@@ -307,10 +322,18 @@ class Focus_Ajax {
 	 *
 	 * @since  1.1.0
 	 * @param  string $focus_point The focus point string.
-	 * @return bool                True if valid.
+	 * @return bool                True if valid (format and 0-100% range).
 	 */
 	private function is_valid_focus_point( string $focus_point ): bool {
-		// Pattern: "XX% YY%" where XX and YY are 0-100.
-		return (bool) preg_match( '/^(\d{1,3}(\.\d+)?%)\s+(\d{1,3}(\.\d+)?%)$/', $focus_point );
+		// Pattern: "XX% YY%" where XX and YY are numbers with optional decimals.
+		if ( ! preg_match( '/^(\d{1,3}(?:\.\d+)?%)\s+(\d{1,3}(?:\.\d+)?%)$/', $focus_point, $matches ) ) {
+			return false;
+		}
+
+		// Validate range 0-100 for both values.
+		$x = (float) $matches[1];
+		$y = (float) $matches[2];
+
+		return $x >= 0 && $x <= 100 && $y >= 0 && $y <= 100;
 	}
 }
