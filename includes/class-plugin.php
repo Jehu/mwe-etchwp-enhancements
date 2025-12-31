@@ -54,6 +54,30 @@ class Plugin {
 	private $focus_position = null;
 
 	/**
+	 * Focus Dynamic Data instance.
+	 *
+	 * @since 1.1.0
+	 * @var Focus_Dynamic_Data|null
+	 */
+	private $focus_dynamic_data = null;
+
+	/**
+	 * Focus Ajax instance.
+	 *
+	 * @since 1.1.0
+	 * @var Focus_Ajax|null
+	 */
+	private $focus_ajax = null;
+
+	/**
+	 * Focus Editor UI instance.
+	 *
+	 * @since 1.1.0
+	 * @var Focus_Editor_UI|null
+	 */
+	private $focus_editor_ui = null;
+
+	/**
 	 * Whether Etch plugin is active.
 	 *
 	 * @since 1.0.0
@@ -137,13 +161,23 @@ class Plugin {
 			$this->image_enhancement->init();
 		}
 
-		// Initialize Focus Position.
-		// Note: We always initialize this feature if enabled, regardless of plugin detection.
-		// The feature will only apply if focus point meta data exists for images.
-		// This avoids timing issues with plugin detection during initialization.
+		// Initialize Focus Position features.
 		if ( $this->is_focus_position_enabled() ) {
+			// Core focus position (render_block filter).
 			$this->focus_position = Focus_Position::get_instance();
 			$this->focus_position->init();
+
+			// Dynamic Data integration for Etch.
+			$this->focus_dynamic_data = Focus_Dynamic_Data::get_instance();
+			$this->focus_dynamic_data->init();
+
+			// AJAX handlers for overrides.
+			$this->focus_ajax = Focus_Ajax::get_instance();
+			$this->focus_ajax->init();
+
+			// Editor UI for Etch canvas.
+			$this->focus_editor_ui = Focus_Editor_UI::get_instance();
+			$this->focus_editor_ui->init();
 		}
 	}
 
