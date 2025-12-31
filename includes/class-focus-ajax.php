@@ -78,6 +78,7 @@ class Focus_Ajax {
 		add_action( 'wp_ajax_mwe_save_focus_override', array( $this, 'save_focus_override' ) );
 		add_action( 'wp_ajax_mwe_get_focus_override', array( $this, 'get_focus_override' ) );
 		add_action( 'wp_ajax_mwe_delete_focus_override', array( $this, 'delete_focus_override' ) );
+		add_action( 'wp_ajax_mwe_get_global_focus_point', array( $this, 'get_global_focus_point' ) );
 		add_action( 'wp_ajax_mwe_get_all_focus_overrides', array( $this, 'get_all_focus_overrides' ) );
 	}
 
@@ -252,6 +253,53 @@ class Focus_Ajax {
 	 */
 	public static function generate_url_key( string $url ): string {
 		return 'url_' . md5( $url );
+	}
+
+	/**
+	 * Get global focus point for an image URL from Media Library.
+	 *
+	 * @since  1.1.0
+	 * @return void
+	 */
+	public function get_global_focus_point(): void {
+		// Verify nonce.
+		if ( ! check_ajax_referer( 'mwe_focus_point_nonce', 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => 'Invalid nonce' ), 403 );
+		}
+
+		$image_url = isset( $_GET['image_url'] ) ? esc_url_raw( wp_unslash( $_GET['image_url'] ) ) : '';
+
+		if ( ! $image_url ) {
+			wp_send_json_error( array( 'message' => 'Missing image_url' ), 400 );
+		}
+
+		// Try to get attachment ID from URL.
+		$attachment_id = attachment_url_to_postid( $image_url );
+
+		// If that fails, try with the Helper class.
+		if ( ! $attachment_id && class_exists( 'MWE\\EtchWP_Enhancements\\Helper' ) ) {
+			$attachment_id = Helper::find_attachment_by_filename( $image_url );
+		}
+
+		if ( ! $attachment_id ) {
+			wp_send_json_success(
+				array(
+					'focus_point'   => null,
+					'attachment_id' => null,
+				)
+			);
+			return;
+		}
+
+		// Get focus point from post meta.
+		$focus_point = get_post_meta( $attachment_id, 'bg_pos_desktop', true );
+
+		wp_send_json_success(
+			array(
+				'focus_point'   => $focus_point ? $focus_point : null,
+				'attachment_id' => $attachment_id,
+			)
+		);
 	}
 
 	/**

@@ -238,10 +238,12 @@
 		/**
 		 * Inject the focus point UI into the panel.
 		 */
-		function injectFocusPointUI(panel, image) {
+		async function injectFocusPointUI(panel, image) {
 			const imageKey = getImageKey(image);
 			const currentOverride = overridesCache[imageKey] || null;
-			const globalValue = getGlobalFocusPoint(image);
+			
+			// Fetch global focus point from server
+			const globalValue = await fetchGlobalFocusPoint(image.src);
 
 			// Create container.
 			const container = document.createElement('div');
@@ -371,20 +373,25 @@
 		}
 
 		/**
-		 * Get global focus point from image data.
+		 * Fetch global focus point from server via AJAX.
 		 */
-		function getGlobalFocusPoint(image) {
-			// Handle virtual image object from panel
-			if (image.fromPanel) {
-				return null; // No global focus point available from panel
+		async function fetchGlobalFocusPoint(imageUrl) {
+			if (!imageUrl) return null;
+			
+			try {
+				const response = await fetch(
+					`${ajaxUrl}?action=mwe_get_global_focus_point&image_url=${encodeURIComponent(imageUrl)}&nonce=${nonce}`
+				);
+				const data = await response.json();
+				
+				if (data.success && data.data.focus_point) {
+					return data.data.focus_point;
+				}
+			} catch (error) {
+				console.warn('MWE Focus Point: Failed to fetch global focus point', error);
 			}
 			
-			// Check for inline style.
-			const style = image.style?.objectPosition;
-			if (style) return style;
-
-			// Check for data attribute.
-			return image.dataset?.focusPoint || null;
+			return null;
 		}
 
 		/**
