@@ -78,6 +78,14 @@ class Plugin {
 	private $focus_editor_ui = null;
 
 	/**
+	 * GitHub Updater instance.
+	 *
+	 * @since 1.2.0
+	 * @var GitHub_Updater|null
+	 */
+	private $github_updater = null;
+
+	/**
 	 * Whether Etch plugin is active.
 	 *
 	 * @since 1.0.0
@@ -179,6 +187,10 @@ class Plugin {
 			$this->focus_editor_ui = Focus_Editor_UI::get_instance();
 			$this->focus_editor_ui->init();
 		}
+
+		// Initialize GitHub Updater for automatic updates.
+		$this->github_updater = GitHub_Updater::get_instance();
+		$this->github_updater->init();
 	}
 
 	/**
