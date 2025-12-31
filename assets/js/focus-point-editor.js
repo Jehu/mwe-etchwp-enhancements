@@ -357,7 +357,7 @@
 		function getImageKey(image) {
 			// Handle virtual image object from panel
 			if (image.fromPanel) {
-				return 'url_' + hashCode(image.src);
+				return 'url_' + md5(image.src);
 			}
 			
 			// Try to get attachment ID from data attribute or class.
@@ -369,7 +369,7 @@
 			}
 
 			// Fall back to URL hash.
-			return 'url_' + hashCode(image.src);
+			return 'url_' + md5(image.src);
 		}
 
 		/**
@@ -500,16 +500,163 @@
 		}
 
 		/**
-		 * Simple hash function for URLs.
+		 * MD5 hash function for URLs (matches PHP's md5()).
+		 * Simplified implementation for generating consistent keys.
 		 */
-		function hashCode(str) {
-			let hash = 0;
-			for (let i = 0; i < str.length; i++) {
-				const char = str.charCodeAt(i);
-				hash = ((hash << 5) - hash) + char;
-				hash = hash & hash;
+		function md5(str) {
+			// Use a simple but consistent hash that matches PHP's md5
+			// We'll use the same algorithm as PHP by implementing MD5
+			function rotateLeft(val, shift) {
+				return (val << shift) | (val >>> (32 - shift));
 			}
-			return Math.abs(hash).toString(16);
+
+			function addUnsigned(x, y) {
+				const x8 = x & 0x80000000;
+				const y8 = y & 0x80000000;
+				const x4 = x & 0x40000000;
+				const y4 = y & 0x40000000;
+				const result = (x & 0x3FFFFFFF) + (y & 0x3FFFFFFF);
+				if (x4 & y4) return result ^ 0x80000000 ^ x8 ^ y8;
+				if (x4 | y4) {
+					if (result & 0x40000000) return result ^ 0xC0000000 ^ x8 ^ y8;
+					return result ^ 0x40000000 ^ x8 ^ y8;
+				}
+				return result ^ x8 ^ y8;
+			}
+
+			function F(x, y, z) { return (x & y) | (~x & z); }
+			function G(x, y, z) { return (x & z) | (y & ~z); }
+			function H(x, y, z) { return x ^ y ^ z; }
+			function I(x, y, z) { return y ^ (x | ~z); }
+
+			function FF(a, b, c, d, x, s, ac) {
+				a = addUnsigned(a, addUnsigned(addUnsigned(F(b, c, d), x), ac));
+				return addUnsigned(rotateLeft(a, s), b);
+			}
+			function GG(a, b, c, d, x, s, ac) {
+				a = addUnsigned(a, addUnsigned(addUnsigned(G(b, c, d), x), ac));
+				return addUnsigned(rotateLeft(a, s), b);
+			}
+			function HH(a, b, c, d, x, s, ac) {
+				a = addUnsigned(a, addUnsigned(addUnsigned(H(b, c, d), x), ac));
+				return addUnsigned(rotateLeft(a, s), b);
+			}
+			function II(a, b, c, d, x, s, ac) {
+				a = addUnsigned(a, addUnsigned(addUnsigned(I(b, c, d), x), ac));
+				return addUnsigned(rotateLeft(a, s), b);
+			}
+
+			function convertToWordArray(str) {
+				const len = str.length;
+				const numWords = ((len + 8 - (len + 8) % 64) / 64 + 1) * 16;
+				const words = new Array(numWords).fill(0);
+				let pos = 0;
+				for (let i = 0; i < len; i++) {
+					const wordIdx = (i - i % 4) / 4;
+					pos = (i % 4) * 8;
+					words[wordIdx] |= str.charCodeAt(i) << pos;
+				}
+				const wordIdx = (len - len % 4) / 4;
+				pos = (len % 4) * 8;
+				words[wordIdx] |= 0x80 << pos;
+				words[numWords - 2] = len << 3;
+				words[numWords - 1] = len >>> 29;
+				return words;
+			}
+
+			function wordToHex(val) {
+				let hex = '';
+				for (let i = 0; i <= 3; i++) {
+					const byte = (val >>> (i * 8)) & 255;
+					hex += ('0' + byte.toString(16)).slice(-2);
+				}
+				return hex;
+			}
+
+			const x = convertToWordArray(str);
+			let a = 0x67452301, b = 0xEFCDAB89, c = 0x98BADCFE, d = 0x10325476;
+
+			const S = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21];
+			const T = [];
+			for (let i = 1; i <= 64; i++) T[i] = Math.floor(Math.abs(Math.sin(i)) * 0x100000000);
+
+			for (let k = 0; k < x.length; k += 16) {
+				const AA = a, BB = b, CC = c, DD = d;
+				a = FF(a, b, c, d, x[k + 0], S[0], T[1]);
+				d = FF(d, a, b, c, x[k + 1], S[1], T[2]);
+				c = FF(c, d, a, b, x[k + 2], S[2], T[3]);
+				b = FF(b, c, d, a, x[k + 3], S[3], T[4]);
+				a = FF(a, b, c, d, x[k + 4], S[0], T[5]);
+				d = FF(d, a, b, c, x[k + 5], S[1], T[6]);
+				c = FF(c, d, a, b, x[k + 6], S[2], T[7]);
+				b = FF(b, c, d, a, x[k + 7], S[3], T[8]);
+				a = FF(a, b, c, d, x[k + 8], S[0], T[9]);
+				d = FF(d, a, b, c, x[k + 9], S[1], T[10]);
+				c = FF(c, d, a, b, x[k + 10], S[2], T[11]);
+				b = FF(b, c, d, a, x[k + 11], S[3], T[12]);
+				a = FF(a, b, c, d, x[k + 12], S[0], T[13]);
+				d = FF(d, a, b, c, x[k + 13], S[1], T[14]);
+				c = FF(c, d, a, b, x[k + 14], S[2], T[15]);
+				b = FF(b, c, d, a, x[k + 15], S[3], T[16]);
+
+				a = GG(a, b, c, d, x[k + 1], S[4], T[17]);
+				d = GG(d, a, b, c, x[k + 6], S[5], T[18]);
+				c = GG(c, d, a, b, x[k + 11], S[6], T[19]);
+				b = GG(b, c, d, a, x[k + 0], S[7], T[20]);
+				a = GG(a, b, c, d, x[k + 5], S[4], T[21]);
+				d = GG(d, a, b, c, x[k + 10], S[5], T[22]);
+				c = GG(c, d, a, b, x[k + 15], S[6], T[23]);
+				b = GG(b, c, d, a, x[k + 4], S[7], T[24]);
+				a = GG(a, b, c, d, x[k + 9], S[4], T[25]);
+				d = GG(d, a, b, c, x[k + 14], S[5], T[26]);
+				c = GG(c, d, a, b, x[k + 3], S[6], T[27]);
+				b = GG(b, c, d, a, x[k + 8], S[7], T[28]);
+				a = GG(a, b, c, d, x[k + 13], S[4], T[29]);
+				d = GG(d, a, b, c, x[k + 2], S[5], T[30]);
+				c = GG(c, d, a, b, x[k + 7], S[6], T[31]);
+				b = GG(b, c, d, a, x[k + 12], S[7], T[32]);
+
+				a = HH(a, b, c, d, x[k + 5], S[8], T[33]);
+				d = HH(d, a, b, c, x[k + 8], S[9], T[34]);
+				c = HH(c, d, a, b, x[k + 11], S[10], T[35]);
+				b = HH(b, c, d, a, x[k + 14], S[11], T[36]);
+				a = HH(a, b, c, d, x[k + 1], S[8], T[37]);
+				d = HH(d, a, b, c, x[k + 4], S[9], T[38]);
+				c = HH(c, d, a, b, x[k + 7], S[10], T[39]);
+				b = HH(b, c, d, a, x[k + 10], S[11], T[40]);
+				a = HH(a, b, c, d, x[k + 13], S[8], T[41]);
+				d = HH(d, a, b, c, x[k + 0], S[9], T[42]);
+				c = HH(c, d, a, b, x[k + 3], S[10], T[43]);
+				b = HH(b, c, d, a, x[k + 6], S[11], T[44]);
+				a = HH(a, b, c, d, x[k + 9], S[8], T[45]);
+				d = HH(d, a, b, c, x[k + 12], S[9], T[46]);
+				c = HH(c, d, a, b, x[k + 15], S[10], T[47]);
+				b = HH(b, c, d, a, x[k + 2], S[11], T[48]);
+
+				a = II(a, b, c, d, x[k + 0], S[12], T[49]);
+				d = II(d, a, b, c, x[k + 7], S[13], T[50]);
+				c = II(c, d, a, b, x[k + 14], S[14], T[51]);
+				b = II(b, c, d, a, x[k + 5], S[15], T[52]);
+				a = II(a, b, c, d, x[k + 12], S[12], T[53]);
+				d = II(d, a, b, c, x[k + 3], S[13], T[54]);
+				c = II(c, d, a, b, x[k + 10], S[14], T[55]);
+				b = II(b, c, d, a, x[k + 1], S[15], T[56]);
+				a = II(a, b, c, d, x[k + 8], S[12], T[57]);
+				d = II(d, a, b, c, x[k + 15], S[13], T[58]);
+				c = II(c, d, a, b, x[k + 6], S[14], T[59]);
+				b = II(b, c, d, a, x[k + 13], S[15], T[60]);
+				a = II(a, b, c, d, x[k + 4], S[12], T[61]);
+				d = II(d, a, b, c, x[k + 11], S[13], T[62]);
+				c = II(c, d, a, b, x[k + 2], S[14], T[63]);
+				b = II(b, c, d, a, x[k + 9], S[15], T[64]);
+
+				a = addUnsigned(a, AA);
+				b = addUnsigned(b, BB);
+				c = addUnsigned(c, CC);
+				d = addUnsigned(d, DD);
+			}
+
+			return wordToHex(a) + wordToHex(b) + wordToHex(c) + wordToHex(d);
 		}
 
 		// Initialize when DOM is ready.
