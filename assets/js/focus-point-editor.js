@@ -56,6 +56,9 @@
 			// Listen for image selection in canvas.
 			observeCanvasSelection();
 
+			// Watch for src input changes in panel.
+			observeSrcInputChanges();
+
 			// Watch iframe for image changes.
 			observeIframeChanges();
 		}
@@ -110,6 +113,37 @@
 				const img = e.target.closest('img');
 				if (img && isInEtchCanvas(img)) {
 					setTimeout(checkForImagePanel, 100);
+				}
+			});
+		}
+
+		/**
+		 * Observe src input changes in the panel.
+		 * Input value changes are not DOM mutations, so we need event listeners.
+		 */
+		function observeSrcInputChanges() {
+			// Use event delegation on document for input events
+			document.addEventListener('input', (e) => {
+				const input = e.target;
+				if (!input.matches || !input.matches('.etch-input')) return;
+
+				// Check if this input contains an image URL
+				if (isImageUrl(input.value)) {
+					// Debounce the update to avoid too many refreshes while typing
+					clearTimeout(observeSrcInputChanges.debounceTimer);
+					observeSrcInputChanges.debounceTimer = setTimeout(() => {
+						checkForImagePanel();
+					}, 300);
+				}
+			});
+
+			// Also listen for change events (when input loses focus)
+			document.addEventListener('change', (e) => {
+				const input = e.target;
+				if (!input.matches || !input.matches('.etch-input')) return;
+
+				if (isImageUrl(input.value)) {
+					checkForImagePanel();
 				}
 			});
 		}
