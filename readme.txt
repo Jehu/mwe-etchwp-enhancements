@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -92,6 +92,11 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 == Changelog ==
 
+= 1.2.1 =
+* Fixed: Portrait images now display fully in Focus Point preview (no more clipping)
+* Fixed: Focus Point UI now updates when image src is changed in panel
+* Fixed: Height jump when Saving/Saved status appears
+
 = 1.2.0 =
 * Added: Automatic updates from GitHub Releases
 * Added: One-click upgrade support via WordPress admin
@@ -139,6 +144,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.2.1 =
+Bugfix release: Fixes Focus Point UI issues with portrait images, input changes, and layout stability.
 
 = 1.1.0 =
 New feature: Per-page focus point overrides in Etch editor. Click on image preview to set custom focus points per page.
