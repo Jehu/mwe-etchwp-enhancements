@@ -254,6 +254,15 @@ This plugin follows:
 
 ## Changelog
 
+### 1.2.1 - 2025
+- **Fixed:** Portrait images now display fully in Focus Point preview (no more clipping)
+- **Fixed:** Focus Point UI now updates when image src is changed in panel
+- **Fixed:** Height jump when Saving/Saved status appears
+
+### 1.2.0 - 2025
+- **Added:** Automatic updates from GitHub Releases
+- **Added:** One-click upgrade support via WordPress admin
+
 ### 1.1.0 - 2025
 - **Added:** Per-page focus point overrides in Etch editor
 - **Added:** Visual focus point editor UI with click-to-set functionality
