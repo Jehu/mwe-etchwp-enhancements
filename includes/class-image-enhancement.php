@@ -85,8 +85,15 @@ class Image_Enhancement {
 	 * @return string                The modified block content.
 	 */
 	public function filter_images( $block_content, $block ) {
+		$block_name = $block['blockName'] ?? '';
+
 		// Process only supported Etch blocks that can contain images.
-		if ( ! Helper::is_processable_etch_block( $block['blockName'] ?? '' ) ) {
+		if ( ! Helper::is_processable_etch_block( $block_name ) ) {
+			return $block_content;
+		}
+
+		// Skip blocks that handle their own responsive images (e.g., etch/dynamic-image).
+		if ( Helper::should_skip_responsive_images( $block_name ) ) {
 			return $block_content;
 		}
 

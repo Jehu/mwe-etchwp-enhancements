@@ -56,6 +56,7 @@ class Helper {
 			'etch/dynamic-element', // Dynamic HTML elements.
 			'etch/raw-html',        // Raw HTML blocks.
 			'etch/component',       // Component blocks (can contain any content).
+			'etch/dynamic-image',   // Dynamic image blocks (focus position only).
 		);
 
 		/**
@@ -71,6 +72,34 @@ class Helper {
 		$processable_blocks = apply_filters( 'mwe_etchwp_processable_blocks', $processable_blocks );
 
 		return in_array( $block_name, $processable_blocks, true );
+	}
+
+	/**
+	 * Check if a block type should skip responsive image processing.
+	 *
+	 * Some blocks (like etch/dynamic-image) already handle their own responsive
+	 * images (srcset, sizes) and should only receive focus position processing.
+	 *
+	 * @since  1.0.3
+	 * @param  string $block_name The block name to check.
+	 * @return bool               Whether the block should skip responsive image processing.
+	 */
+	public static function should_skip_responsive_images( $block_name ) {
+		// Blocks that handle their own responsive images.
+		$skip_blocks = array(
+			'etch/dynamic-image', // Already generates srcset/sizes.
+		);
+
+		/**
+		 * Filter the list of blocks that should skip responsive image processing.
+		 *
+		 * @since 1.0.3
+		 *
+		 * @param array $skip_blocks Array of block names that should skip responsive images.
+		 */
+		$skip_blocks = apply_filters( 'mwe_etchwp_skip_responsive_blocks', $skip_blocks );
+
+		return in_array( $block_name, $skip_blocks, true );
 	}
 
 	/**

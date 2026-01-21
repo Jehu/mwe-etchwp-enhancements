@@ -47,7 +47,7 @@ The Focus Point Editor appears automatically when you select an image in the Etc
 
 ### Required
 
-- **Etch** page builder (v1.0.0-alpha-14 or higher)
+- **Etch** page builder (v1.0.0-beta-15 or higher recommended)
 - **PHP** 8.1 or higher
 - **WordPress** 5.9 or higher
 
@@ -95,7 +95,7 @@ define( 'MWE_ETCHWP_FOCUS_POSITION', false );
 ### Image Enhancement Process
 
 1. Hooks into `render_block` filter (priority 15) after Etch processes blocks
-2. Detects `<img>` tags in Etch blocks (element, component, dynamic-element, raw-html)
+2. Detects `<img>` tags in supported Etch blocks
 3. **Performance check**: Skips images that already have all attributes (early-exit)
 4. **Cache check**: Returns cached attachment ID if image was previously processed
 5. Attempts to find attachment ID from image URL using multiple strategies
@@ -103,13 +103,26 @@ define( 'MWE_ETCHWP_FOCUS_POSITION', false );
 7. Adds only the missing attributes without modifying existing ones
 8. **Caches result**: Stores attachment ID for future lookups within the same request
 
+### Supported Blocks
+
+**Full processing (image enhancement + focus position):**
+- `etch/element` - Standard HTML elements
+- `etch/dynamic-element` - Dynamic HTML elements
+- `etch/raw-html` - Raw HTML blocks
+- `etch/component` - Component blocks
+
+**Focus position only:**
+- `etch/dynamic-image` - [Dynamic Image element](https://docs.etchwp.com/elements/dynamic-image) (Etch 1.0.0-beta-15+)
+
+The Dynamic Image element in Etch already handles responsive image attributes (srcset, sizes, width, height) internally. This plugin only applies focus position styling to these images to avoid conflicts and duplicate processing.
+
 ### Focus Position Process
 
 1. Reads focus point data from compatible plugins
 2. Adds data to attachment metadata via `wp_get_attachment_metadata` filter
 3. Checks for per-page overrides stored in post meta
 4. Applies CSS `object-position` during block rendering (override > global > default)
-5. Automatically applies image enhancements as well
+5. Automatically applies image enhancements as well (except for `etch/dynamic-image`)
 
 ### Per-Page Focus Point Overrides
 
@@ -160,7 +173,7 @@ Customize which Etch block types are processed for image enhancement and focus p
 
 ```php
 /**
- * @param array $processable_blocks Default: ['etch/element', 'etch/dynamic-element', 'etch/raw-html', 'etch/component']
+ * @param array $processable_blocks Default: ['etch/element', 'etch/dynamic-element', 'etch/raw-html', 'etch/component', 'etch/dynamic-image']
  * @return array
  */
 apply_filters( 'mwe_etchwp_processable_blocks', $processable_blocks );
@@ -178,6 +191,28 @@ add_filter( 'mwe_etchwp_processable_blocks', function( $blocks ) {
 // Remove a specific block from processing
 add_filter( 'mwe_etchwp_processable_blocks', function( $blocks ) {
     return array_diff( $blocks, array( 'etch/raw-html' ) );
+} );
+```
+
+#### `mwe_etchwp_skip_responsive_blocks`
+
+Customize which blocks should skip responsive image processing (srcset, sizes, width, height). These blocks still receive focus position processing.
+
+```php
+/**
+ * @param array $skip_blocks Default: ['etch/dynamic-image']
+ * @return array
+ */
+apply_filters( 'mwe_etchwp_skip_responsive_blocks', $skip_blocks );
+```
+
+**Example usage:**
+
+```php
+// Add another block that handles its own responsive images
+add_filter( 'mwe_etchwp_skip_responsive_blocks', function( $blocks ) {
+    $blocks[] = 'etch/custom-responsive-block';
+    return $blocks;
 } );
 ```
 
@@ -253,6 +288,11 @@ This plugin follows:
 - Strict typing with `declare(strict_types=1)`
 
 ## Changelog
+
+### 1.2.2 - 2026
+- **Added:** Support for new `etch/dynamic-image` block (Etch 1.0.0-beta-15+)
+- **Added:** New filter `mwe_etchwp_skip_responsive_blocks` to control which blocks skip responsive image processing
+- **Note:** `etch/dynamic-image` receives focus position only (no srcset/sizes changes as Etch handles these)
 
 ### 1.2.1 - 2025
 - **Fixed:** Portrait images now display fully in Focus Point preview (no more clipping)

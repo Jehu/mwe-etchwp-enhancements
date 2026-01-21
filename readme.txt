@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 1.2.1
+Stable tag: 1.2.2
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -33,7 +33,7 @@ MWE EtchWP Enhancements is a WordPress plugin that extends the functionality of 
 = Requirements =
 
 **Required:**
-* Etch page builder plugin (version 1.0.0-alpha-14 or higher)
+* Etch page builder plugin (version 1.0.0-beta-15 or higher recommended)
 * PHP 8.1 or higher
 * WordPress 5.9 or higher
 
@@ -43,9 +43,22 @@ MWE EtchWP Enhancements is a WordPress plugin that extends the functionality of 
 
 = How It Works =
 
-The plugin hooks into Etch's block rendering process and automatically enhances `<img>` tags within `etch/block` blocks. It intelligently detects which attributes are missing and adds them without modifying existing attributes.
+The plugin hooks into Etch's block rendering process and automatically enhances `<img>` tags within supported Etch blocks. It intelligently detects which attributes are missing and adds them without modifying existing attributes.
 
 For focus position support, the plugin reads focus point data from compatible plugins and applies CSS `object-position` to ensure images display with the correct focal point on all devices.
+
+= Supported Blocks =
+
+**Full processing (image enhancement + focus position):**
+* `etch/element` - Standard HTML elements
+* `etch/dynamic-element` - Dynamic HTML elements
+* `etch/raw-html` - Raw HTML blocks
+* `etch/component` - Component blocks
+
+**Focus position only:**
+* `etch/dynamic-image` - [Dynamic Image element](https://docs.etchwp.com/elements/dynamic-image) (Etch 1.0.0-beta-15+)
+
+The Dynamic Image element in Etch already handles responsive image attributes (srcset, sizes, width, height) internally. This plugin only applies focus position styling to these images to avoid conflicts and duplicate processing.
 
 == Installation ==
 
@@ -91,6 +104,11 @@ No, the plugin processes images during block rendering with minimal overhead. It
 No, the plugin only modifies the HTML output. Your original images and their metadata remain unchanged.
 
 == Changelog ==
+
+= 1.2.2 =
+* Added: Support for new `etch/dynamic-image` block (Etch 1.0.0-beta-15+)
+* Added: New filter `mwe_etchwp_skip_responsive_blocks` to control which blocks skip responsive image processing
+* Note: `etch/dynamic-image` receives focus position only (no srcset/sizes changes as Etch handles these)
 
 = 1.2.1 =
 * Fixed: Portrait images now display fully in Focus Point preview (no more clipping)
@@ -145,6 +163,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 == Upgrade Notice ==
 
+= 1.2.2 =
+Adds support for Etch 1.0.0-beta-15's new dynamic-image block with focus position processing.
+
 = 1.2.1 =
 Bugfix release: Fixes Focus Point UI issues with portrait images, input changes, and layout stability.
 
@@ -183,7 +204,11 @@ Control whether focus position feature is enabled.
 
 **mwe_etchwp_processable_blocks**
 Customize which Etch block types are processed for image enhancement and focus position.
-`apply_filters( 'mwe_etchwp_processable_blocks', array( 'etch/element', 'etch/dynamic-element', 'etch/raw-html', 'etch/component' ) )`
+`apply_filters( 'mwe_etchwp_processable_blocks', array( 'etch/element', 'etch/dynamic-element', 'etch/raw-html', 'etch/component', 'etch/dynamic-image' ) )`
+
+**mwe_etchwp_skip_responsive_blocks**
+Customize which blocks should skip responsive image processing (srcset/sizes). These blocks still receive focus position processing.
+`apply_filters( 'mwe_etchwp_skip_responsive_blocks', array( 'etch/dynamic-image' ) )`
 
 = Constants =
 
