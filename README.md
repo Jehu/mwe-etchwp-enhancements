@@ -47,7 +47,7 @@ The Focus Point Editor appears automatically when you select an image in the Etc
 
 ### Required
 
-- **Etch** page builder (v1.0.0-beta-15 or higher recommended)
+- **Etch** page builder (v1.0.0-rc-7 or higher recommended)
 - **PHP** 8.1 or higher
 - **WordPress** 5.9 or higher
 
@@ -288,6 +288,12 @@ This plugin follows:
 - Strict typing with `declare(strict_types=1)`
 
 ## Changelog
+
+### 1.2.3 - 2026
+- **Tested:** Full compatibility with Etch 1.0.0-rc-7
+- **Confirmed:** All expected blocks (element, dynamic-element, raw-html, component, dynamic-image) are still registered
+- **Verified:** HTML output format unchanged (standard img tags, no wrapper elements)
+- **Note:** No code changes required - plugin works with both beta-15 and rc-7
 
 ### 1.2.2 - 2026
 - **Added:** Support for new `etch/dynamic-image` block (Etch 1.0.0-beta-15+)

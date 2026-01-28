@@ -2,9 +2,9 @@
 Contributors: marcomichely
 Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
-Tested up to: 6.7
+Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.2.2
+Stable tag: 1.2.3
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -33,7 +33,7 @@ MWE EtchWP Enhancements is a WordPress plugin that extends the functionality of 
 = Requirements =
 
 **Required:**
-* Etch page builder plugin (version 1.0.0-beta-15 or higher recommended)
+* Etch page builder plugin (version 1.0.0-rc-7 or higher recommended)
 * PHP 8.1 or higher
 * WordPress 5.9 or higher
 
@@ -105,6 +105,12 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 == Changelog ==
 
+= 1.2.3 =
+* Tested: Full compatibility with Etch 1.0.0-rc-7
+* Confirmed: All expected blocks (element, dynamic-element, raw-html, component, dynamic-image) are still registered
+* Verified: HTML output format unchanged (standard img tags, no wrapper elements)
+* No code changes required - plugin works with both beta-15 and rc-7
+
 = 1.2.2 =
 * Added: Support for new `etch/dynamic-image` block (Etch 1.0.0-beta-15+)
 * Added: New filter `mwe_etchwp_skip_responsive_blocks` to control which blocks skip responsive image processing
@@ -162,6 +168,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.2.3 =
+Confirmed compatibility with Etch 1.0.0-rc-7. No code changes required.
 
 = 1.2.2 =
 Adds support for Etch 1.0.0-beta-15's new dynamic-image block with focus position processing.
