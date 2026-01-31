@@ -47,7 +47,7 @@ The Focus Point Editor appears automatically when you select an image in the Etc
 
 ### Required
 
-- **Etch** page builder (v1.0.0-rc-7 or higher recommended)
+- **Etch** page builder (v1.0.0 or higher recommended)
 - **PHP** 8.1 or higher
 - **WordPress** 5.9 or higher
 
