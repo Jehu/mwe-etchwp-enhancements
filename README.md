@@ -234,6 +234,19 @@ Enable/disable focus position feature.
 define( 'MWE_ETCHWP_FOCUS_POSITION', false );
 ```
 
+#### `MWE_ETCHWP_GITHUB_TOKEN`
+
+GitHub Personal Access Token to avoid API rate limits when checking for updates. Without a token, GitHub limits requests to 60/hour which can cause "Could not determine if updates are available" errors.
+
+```php
+define( 'MWE_ETCHWP_GITHUB_TOKEN', 'ghp_your_token_here' );
+```
+
+To create a token:
+1. Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Generate new token with `public_repo` scope (for public repositories, no scope is actually needed)
+3. Add the constant to your `wp-config.php`
+
 ### Class Architecture
 
 ```
@@ -288,6 +301,10 @@ This plugin follows:
 - Strict typing with `declare(strict_types=1)`
 
 ## Changelog
+
+### 1.2.5 - 2026
+- **Added:** Support for GitHub Personal Access Token (`MWE_ETCHWP_GITHUB_TOKEN` constant) to avoid API rate limits
+- **Fixed:** "Could not determine if updates are available" error caused by GitHub API rate limiting (403 errors)
 
 ### 1.2.4 - 2026
 - **Added:** Focus Point Editor now supports `etch:img` elements (Etch's native Image element)

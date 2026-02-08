@@ -110,6 +110,12 @@ class GitHub_Updater {
 
 		// Use GitHub releases for updates.
 		$this->update_checker->getVcsApi()->enableReleaseAssets();
+
+		// Set GitHub access token if defined (increases API rate limit from 60 to 5000 requests/hour).
+		// Define in wp-config.php: define( 'MWE_ETCHWP_GITHUB_TOKEN', 'your_token_here' );
+		if ( defined( 'MWE_ETCHWP_GITHUB_TOKEN' ) && MWE_ETCHWP_GITHUB_TOKEN ) {
+			$this->update_checker->setAuthentication( MWE_ETCHWP_GITHUB_TOKEN );
+		}
 	}
 
 	/**
