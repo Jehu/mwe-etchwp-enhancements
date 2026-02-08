@@ -116,9 +116,9 @@ class Focus_Position {
 			return $block_content;
 		}
 
-		// Apply focus points to images in the block content.
+		// Apply focus points to images in the block content (both <img> and <etch:img>).
 		$block_content = preg_replace_callback(
-			'/<img([^>]+)src=["\']([^"\']*wp-content\/uploads[^"\']*)["\']([^>]*)>/i',
+			'/<(img|etch:img)([^>]+)src=["\']([^"\']*wp-content\/uploads[^"\']*)["\']([^>]*)>/i',
 			array( $this, 'add_focus_to_image' ),
 			$block_content
 		);
@@ -135,7 +135,8 @@ class Focus_Position {
 	 */
 	public function add_focus_to_image( $matches ) {
 		$full_tag = $matches[0];
-		$src      = $matches[2];
+		$tag_name = $matches[1]; // 'img' or 'etch:img'
+		$src      = $matches[3]; // src is now in position 3 due to tag capture group
 
 		// Get current post ID for override lookup.
 		$post_id = $this->get_current_post_id();
@@ -185,8 +186,9 @@ class Focus_Position {
 				$full_tag
 			);
 		} else {
-			// No style attribute, add one.
-			$full_tag = str_replace( '<img', '<img style="object-position: ' . esc_attr( $position ) . '"', $full_tag );
+			// No style attribute, add one (works for both <img> and <etch:img>).
+			$opening_tag = '<' . $tag_name;
+			$full_tag    = str_replace( $opening_tag, $opening_tag . ' style="object-position: ' . esc_attr( $position ) . '"', $full_tag );
 		}
 
 		// Enhance image with missing attributes if Image_Enhancement is available.

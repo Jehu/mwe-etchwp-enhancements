@@ -289,6 +289,12 @@ This plugin follows:
 
 ## Changelog
 
+### 1.2.4 - 2026
+- **Added:** Focus Point Editor now supports `etch:img` elements (Etch's native Image element)
+- **Improved:** Significantly faster panel switching when selecting different images (debounced DOM observers)
+- **Fixed:** Theme filters for disabling features now work correctly when added in `functions.php`
+- **Changed:** Plugin initialization moved to `after_setup_theme` hook for better filter compatibility
+
 ### 1.2.3 - 2026
 - **Tested:** Full compatibility with Etch 1.0.0-rc-7
 - **Confirmed:** All expected blocks (element, dynamic-element, raw-html, component, dynamic-image) are still registered

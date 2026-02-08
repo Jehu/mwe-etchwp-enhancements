@@ -80,6 +80,7 @@ class Focus_Ajax {
 		add_action( 'wp_ajax_mwe_delete_focus_override', array( $this, 'delete_focus_override' ) );
 		add_action( 'wp_ajax_mwe_get_global_focus_point', array( $this, 'get_global_focus_point' ) );
 		add_action( 'wp_ajax_mwe_get_all_focus_overrides', array( $this, 'get_all_focus_overrides' ) );
+		add_action( 'wp_ajax_mwe_get_attachment_data', array( $this, 'get_attachment_data' ) );
 	}
 
 	/**
@@ -313,6 +314,51 @@ class Focus_Ajax {
 			array(
 				'focus_point'   => $focus_point ? $focus_point : null,
 				'attachment_id' => $attachment_id,
+			)
+		);
+	}
+
+	/**
+	 * Get attachment data (URL and focus point) by attachment ID.
+	 *
+	 * Used for etch:img elements which store attachment ID instead of URL.
+	 *
+	 * @since  1.2.0
+	 * @return void
+	 */
+	public function get_attachment_data(): void {
+		// Verify nonce.
+		if ( ! check_ajax_referer( 'mwe_focus_point_nonce', 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => 'Invalid nonce' ), 403 );
+		}
+
+		// Check permissions.
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_send_json_error( array( 'message' => 'Insufficient permissions' ), 403 );
+		}
+
+		$attachment_id = isset( $_GET['attachment_id'] ) ? absint( $_GET['attachment_id'] ) : 0;
+
+		if ( ! $attachment_id ) {
+			wp_send_json_error( array( 'message' => 'Missing attachment_id' ), 400 );
+		}
+
+		// Verify the attachment exists and is an image.
+		$attachment = get_post( $attachment_id );
+		if ( ! $attachment || 'attachment' !== $attachment->post_type ) {
+			wp_send_json_error( array( 'message' => 'Invalid attachment ID' ), 404 );
+		}
+
+		// Get attachment URL.
+		$url = wp_get_attachment_url( $attachment_id );
+
+		// Get focus point from post meta.
+		$focus_point = get_post_meta( $attachment_id, 'bg_pos_desktop', true );
+
+		wp_send_json_success(
+			array(
+				'url'         => $url ? $url : null,
+				'focus_point' => $focus_point ? $focus_point : null,
 			)
 		);
 	}

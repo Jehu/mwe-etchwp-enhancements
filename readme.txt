@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.2.3
+Stable tag: 1.2.4
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -104,6 +104,12 @@ No, the plugin processes images during block rendering with minimal overhead. It
 No, the plugin only modifies the HTML output. Your original images and their metadata remain unchanged.
 
 == Changelog ==
+
+= 1.2.4 =
+* Added: Focus Point Editor now supports etch:img elements
+* Improved: Significantly faster panel switching when selecting different images
+* Fixed: Theme filters for disabling features now work correctly in functions.php
+* Changed: Plugin initialization moved to after_setup_theme hook for better filter compatibility
 
 = 1.2.3 =
 * Tested: Full compatibility with Etch 1.0.0-rc-7

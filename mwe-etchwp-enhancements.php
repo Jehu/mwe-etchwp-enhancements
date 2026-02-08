@@ -11,7 +11,7 @@
  * Plugin Name:       MWE EtchWP Enhancements
  * Plugin URI:        https://github.com/Jehu/mwe-etchwp-enhancements
  * Description:       Enhances Etch page builder with improved image handling and focus position support for responsive images.
- * Version:           1.2.3
+ * Version:           1.2.4
  * Requires at least: 5.9
  * Requires PHP:      8.1
  * Author:            Marco Michely
@@ -34,7 +34,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Define plugin constants.
  */
-define( 'MWE_ETCHWP_VERSION', '1.2.3' );
+define( 'MWE_ETCHWP_VERSION', '1.2.4' );
 define( 'MWE_ETCHWP_PLUGIN_FILE', __FILE__ );
 define( 'MWE_ETCHWP_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MWE_ETCHWP_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -95,7 +95,8 @@ function init_plugin() {
 	// Initialize the main plugin class.
 	Plugin::get_instance()->init();
 }
-add_action( 'plugins_loaded', __NAMESPACE__ . '\\init_plugin' );
+// Use 'after_setup_theme' to allow themes to add filters in functions.php before feature init.
+add_action( 'after_setup_theme', __NAMESPACE__ . '\\init_plugin' );
 
 /**
  * Plugin activation hook.

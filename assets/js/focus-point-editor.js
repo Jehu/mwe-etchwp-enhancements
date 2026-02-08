@@ -83,23 +83,65 @@
 			}
 		}
 
+		// Debounce timer for panel checks
+		let panelCheckTimer = null;
+
+		/**
+		 * Debounced panel check - prevents excessive calls during rapid DOM changes.
+		 */
+		function debouncedPanelCheck() {
+			if (panelCheckTimer) {
+				clearTimeout(panelCheckTimer);
+			}
+			panelCheckTimer = setTimeout(() => {
+				panelCheckTimer = null;
+				checkForImagePanel();
+			}, 50);
+		}
+
 		/**
 		 * Observe changes to the Etch settings panel.
 		 */
 		function observePanelChanges() {
-			const observer = new MutationObserver((mutations) => {
-				for (const mutation of mutations) {
-					if (mutation.type === 'childList') {
-						checkForImagePanel();
-					}
-				}
-			});
+			// Find the Etch sidebar container to observe more specifically
+			const findAndObserveSidebar = () => {
+				// Use Etch's actual class names
+				const sidebar = document.querySelector('.etch-sidebar, .etch-sidebar__content-wrapper');
 
-			// Start observing the document body.
-			observer.observe(document.body, {
-				childList: true,
-				subtree: true
-			});
+				if (sidebar) {
+					const observer = new MutationObserver((mutations) => {
+						// Only check if there are meaningful changes
+						let hasRelevantChange = false;
+						for (const mutation of mutations) {
+							if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+								hasRelevantChange = true;
+								break;
+							}
+						}
+						if (hasRelevantChange) {
+							debouncedPanelCheck();
+						}
+					});
+
+					observer.observe(sidebar, {
+						childList: true,
+						subtree: true
+					});
+				} else {
+					// Fallback: observe body but with debouncing
+					const observer = new MutationObserver(() => {
+						debouncedPanelCheck();
+					});
+
+					observer.observe(document.body, {
+						childList: true,
+						subtree: true
+					});
+				}
+			};
+
+			// Try to find sidebar after a short delay
+			setTimeout(findAndObserveSidebar, 100);
 
 			// Initial check.
 			setTimeout(checkForImagePanel, 500);
@@ -110,7 +152,8 @@
 		 */
 		function observeCanvasSelection() {
 			document.addEventListener('click', (e) => {
-				const img = e.target.closest('img');
+				// Check for both img and etch:img elements
+				const img = e.target.closest('img') || e.target.closest('etch\\:img');
 				if (img && isInEtchCanvas(img)) {
 					setTimeout(checkForImagePanel, 100);
 				}
@@ -168,30 +211,30 @@
 					// Observe iframe for image-related changes only
 					const observer = new MutationObserver((mutations) => {
 						let hasImageChange = false;
-						
+
 						for (const mutation of mutations) {
-							// Check for src attribute changes on img elements
-							if (mutation.type === 'attributes' && 
-								mutation.attributeName === 'src' && 
-								mutation.target.tagName === 'IMG') {
+							// Check for src attribute changes on img or etch:img elements
+							if (mutation.type === 'attributes' &&
+								mutation.attributeName === 'src' &&
+								(mutation.target.tagName === 'IMG' || mutation.target.tagName === 'ETCH:IMG')) {
 								hasImageChange = true;
 								break;
 							}
-							
-							// Check for added img elements
+
+							// Check for added img or etch:img elements
 							if (mutation.type === 'childList') {
 								for (const node of mutation.addedNodes) {
-									if (node.tagName === 'IMG' || 
-										(node.querySelectorAll && node.querySelectorAll('img').length > 0)) {
+									if (node.tagName === 'IMG' || node.tagName === 'ETCH:IMG' ||
+										(node.querySelectorAll && (node.querySelectorAll('img').length > 0 || node.querySelectorAll('etch\\:img').length > 0))) {
 										hasImageChange = true;
 										break;
 									}
 								}
 							}
-							
+
 							if (hasImageChange) break;
 						}
-						
+
 						if (hasImageChange) {
 							applyFocusPointsToIframe();
 						}
@@ -221,7 +264,8 @@
 
 			try {
 				const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-				const images = iframeDoc.querySelectorAll('img');
+				// Select both standard img and etch:img elements
+				const images = iframeDoc.querySelectorAll('img, etch\\:img');
 
 				// Process all images in parallel for better performance
 				await Promise.all([...images].map(img => applyFocusPointToImage(img)));
@@ -271,9 +315,56 @@
 		 * Check if an image settings panel is open and inject our UI.
 		 */
 		function checkForImagePanel() {
-			// Look for Etch's HTML block properties wrapper (the actual settings container for images)
-			const panel = document.querySelector('.etch-html-block-properties-wrapper');
-			
+			let panel = null;
+			let isEtchImageElement = false;
+
+			// Strategy 1: Check for etch:img panel - look for "WP Media ID" field
+			// Use Etch's actual class names: .etch-sidebar, .etch-sidebar__content-wrapper
+			const sidebar = document.querySelector('.etch-sidebar, .etch-sidebar__content-wrapper');
+
+			if (sidebar) {
+				// Look for WP Media ID label - this is unique to etch:img elements
+				const allLabels = sidebar.querySelectorAll('label');
+				for (const label of allLabels) {
+					if (label.textContent && label.textContent.trim() === 'WP Media ID') {
+						// Found etch:img panel - use sidebar as the panel
+						panel = sidebar;
+						isEtchImageElement = true;
+						break;
+					}
+				}
+			}
+
+			// Fallback: search in document if sidebar not found
+			if (!panel && !sidebar) {
+				const allLabels = document.querySelectorAll('label');
+				for (const label of allLabels) {
+					if (label.textContent && label.textContent.trim() === 'WP Media ID') {
+						panel = label.closest('.etch-sidebar, .etch-sidebar__content-wrapper, [class*="sidebar"]') || label.parentElement.parentElement.parentElement;
+						isEtchImageElement = true;
+						break;
+					}
+				}
+			}
+
+			// Strategy 2: Fall back to standard HTML block properties wrapper (for regular <img> tags)
+			if (!panel) {
+				panel = document.querySelector('.etch-html-block-properties-wrapper');
+
+				if (panel) {
+					// Verify this is for an image by checking if tag value is 'img'
+					const tagInput = panel.querySelector('input.etch-combobox__input, input[placeholder="Enter tag"]');
+					const tagValue = tagInput ? tagInput.value.toLowerCase() : '';
+					const isImageTag = tagValue === 'img';
+
+					if (!isImageTag) {
+						removeExistingFocusUI();
+						currentImageSrc = null;
+						return;
+					}
+				}
+			}
+
 			if (!panel) {
 				// No panel, remove any existing UI and reset tracking
 				removeExistingFocusUI();
@@ -281,31 +372,44 @@
 				return;
 			}
 
-			// Verify this is for an image by checking if tag value is 'img'
-			const tagInput = panel.querySelector('input.etch-combobox__input, input[placeholder="Enter tag"]');
-			const isImageTag = tagInput && tagInput.value.toLowerCase() === 'img';
-			
-			if (!isImageTag) {
-				removeExistingFocusUI();
-				currentImageSrc = null;
-				return;
+			// Check if we already have UI injected for this panel
+			if (panel.querySelector('.mwe-focus-point-container')) {
+				// UI already exists, check if we need to update it
+				const selectedImage = getSelectedImage(isEtchImageElement, panel);
+				if (!selectedImage) {
+					removeExistingFocusUI();
+					currentImageSrc = null;
+					return;
+				}
+
+				const newImageKey = selectedImage.isEtchImg
+					? `attachment_${selectedImage.attachmentId}`
+					: selectedImage.src;
+
+				// Only rebuild if image actually changed
+				if (newImageKey === currentImageSrc) {
+					return; // No change, keep existing UI
+				}
 			}
 
 			// Get the currently selected image.
-			const selectedImage = getSelectedImage();
+			const selectedImage = getSelectedImage(isEtchImageElement, panel);
 			if (!selectedImage) {
 				removeExistingFocusUI();
 				currentImageSrc = null;
 				return;
 			}
 
-			// Check if the image changed
-			const newImageSrc = selectedImage.src;
-			if (newImageSrc !== currentImageSrc) {
+			// Check if the image changed (use attachmentId for etch:img, src for regular img)
+			const newImageKey = selectedImage.isEtchImg
+				? `attachment_${selectedImage.attachmentId}`
+				: selectedImage.src;
+
+			if (newImageKey !== currentImageSrc) {
 				// Image changed - remove old UI and create new one
 				removeExistingFocusUI();
-				currentImageSrc = newImageSrc;
-				injectFocusPointUI(panel, selectedImage);
+				currentImageSrc = newImageKey;
+				injectFocusPointUI(panel, selectedImage, isEtchImageElement);
 			}
 		}
 
@@ -334,10 +438,48 @@
 
 		/**
 		 * Get the currently selected image in the canvas.
+		 * @param {boolean} isEtchImageElement - Whether this is an etch:img element
+		 * @param {Element} panelElement - Optional panel element to search within
 		 */
-		function getSelectedImage() {
-			// First, try to get the image src from the panel itself
-			const panel = document.querySelector('.etch-html-block-properties-wrapper');
+		function getSelectedImage(isEtchImageElement = false, panelElement = null) {
+			// For etch:img elements, get the WP Media ID from the panel
+			if (isEtchImageElement) {
+				const searchRoot = panelElement || document;
+
+				// Strategy 1: Find label with "WP Media ID" and get the associated input
+				const allLabels = searchRoot.querySelectorAll('label');
+				for (const label of allLabels) {
+					if (label.textContent && label.textContent.trim() === 'WP Media ID') {
+						// Find the input within the same parent container
+						const container = label.closest('label, [class*="field"], [class*="control"]') || label.parentElement;
+						const input = container.querySelector('input');
+						if (input && input.value && !isNaN(parseInt(input.value))) {
+							return { attachmentId: parseInt(input.value), fromPanel: true, isEtchImg: true };
+						}
+						// Also check for text content with the ID (e.g., displayed next to thumbnail)
+						const textContent = container.textContent;
+						const idMatch = textContent.match(/(\d+)/);
+						if (idMatch && parseInt(idMatch[1]) > 0) {
+							return { attachmentId: parseInt(idMatch[1]), fromPanel: true, isEtchImg: true };
+						}
+					}
+				}
+
+				// Strategy 2: Look for any input near "WP Media ID" text
+				const allInputs = searchRoot.querySelectorAll('input');
+				for (const input of allInputs) {
+					const parent = input.closest('label, [class*="field"], [class*="control"]');
+					if (parent && parent.textContent && parent.textContent.includes('WP Media ID')) {
+						const mediaId = input.value;
+						if (mediaId && !isNaN(parseInt(mediaId))) {
+							return { attachmentId: parseInt(mediaId), fromPanel: true, isEtchImg: true };
+						}
+					}
+				}
+			}
+
+			// For standard img elements, try to get the image src from the panel itself
+			const panel = panelElement || document.querySelector('.etch-html-block-properties-wrapper');
 			if (panel) {
 				// Find the src input field - look for input after 'src' label
 				const labels = panel.querySelectorAll('label.etch-label');
@@ -350,7 +492,7 @@
 						}
 					}
 				}
-				
+
 				// Fallback: check all inputs for image URLs
 				const inputs = panel.querySelectorAll('input.etch-input');
 				for (const input of inputs) {
@@ -359,19 +501,24 @@
 					}
 				}
 			}
-			
+
 			// Try to find in iframe
 			const iframe = document.querySelector('iframe[title="Etch Iframe"]');
 			if (iframe) {
 				try {
 					const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+					// Selectors for both img and etch:img elements
 					const selectors = [
 						'.etch-selected img',
+						'.etch-selected etch\\:img',
 						'[data-etch-selected] img',
+						'[data-etch-selected] etch\\:img',
 						'.etch-builder-block--selected img',
-						'img.etch-builder-block--selected'
+						'.etch-builder-block--selected etch\\:img',
+						'img.etch-builder-block--selected',
+						'etch\\:img.etch-builder-block--selected'
 					];
-					
+
 					for (const selector of selectors) {
 						const img = iframeDoc.querySelector(selector);
 						if (img) return img;
@@ -384,10 +531,15 @@
 			// Fallback: look in main document
 			const selectors = [
 				'.etch-selected img',
+				'.etch-selected etch\\:img',
 				'[data-etch-selected] img',
+				'[data-etch-selected] etch\\:img',
 				'.etch-canvas img.selected',
+				'.etch-canvas etch\\:img.selected',
 				'img[data-etch-selected]',
-				'.etch-element--selected img'
+				'etch\\:img[data-etch-selected]',
+				'.etch-element--selected img',
+				'.etch-element--selected etch\\:img'
 			];
 
 			for (const selector of selectors) {
@@ -400,23 +552,49 @@
 
 		/**
 		 * Inject the focus point UI into the panel.
+		 * @param {Element} panel - The panel element to inject into
+		 * @param {Object} image - Image object with src or attachmentId
+		 * @param {boolean} isEtchImageElement - Whether this is an etch:img element
 		 */
-		async function injectFocusPointUI(panel, image) {
-			// Fetch global focus point and attachment ID from server
-			const globalData = await fetchGlobalFocusPoint(image.src);
-			const globalValue = globalData?.focusPoint || null;
-			const attachmentId = globalData?.attachmentId || null;
-			
+		async function injectFocusPointUI(panel, image, isEtchImageElement = false) {
+			let globalValue = null;
+			let attachmentId = null;
+			let imageSrc = null;
+
+			// Handle etch:img elements which provide attachmentId directly
+			if (image.isEtchImg && image.attachmentId) {
+				attachmentId = image.attachmentId;
+				// Fetch image data by attachment ID
+				const attachmentData = await fetchAttachmentData(attachmentId);
+				imageSrc = attachmentData?.url || null;
+				globalValue = attachmentData?.focusPoint || null;
+			} else {
+				// Standard img element - fetch global focus point from URL
+				imageSrc = image.src;
+				const globalData = await fetchGlobalFocusPoint(imageSrc);
+				globalValue = globalData?.focusPoint || null;
+				attachmentId = globalData?.attachmentId || null;
+			}
+
+			// If we couldn't get an image URL, we can't show the UI
+			if (!imageSrc) {
+				console.warn('MWE Focus Point: Could not determine image URL');
+				return;
+			}
+
 			// Use attachment_id for WordPress images, URL hash for external
-			const imageKey = attachmentId 
-				? `attachment_${attachmentId}` 
-				: 'url_' + md5(image.src);
-			
+			const imageKey = attachmentId
+				? `attachment_${attachmentId}`
+				: 'url_' + md5(imageSrc);
+
 			const currentOverride = overridesCache[imageKey] || null;
 
 			// Create container.
 			const container = document.createElement('div');
 			container.className = 'mwe-focus-point-container';
+			if (isEtchImageElement) {
+				container.classList.add('mwe-focus-point-container--etch-img');
+			}
 
 			// Create header.
 			const header = document.createElement('div');
@@ -431,7 +609,7 @@
 			preview.className = 'mwe-focus-point-preview';
 
 			const previewImage = document.createElement('img');
-			previewImage.src = image.src;
+			previewImage.src = imageSrc;
 			previewImage.className = 'mwe-focus-point-preview-image';
 
 			const marker = document.createElement('div');
@@ -515,9 +693,17 @@
 		 * Find the best insertion point in the panel.
 		 */
 		function findInsertionPoint(panel) {
-			// Find the last label (after src, alt, class fields) to insert after it
-			const labels = panel.querySelectorAll('label.etch-label');
-			return labels.length > 0 ? labels[labels.length - 1] : panel.firstElementChild;
+			// For etch:img panels, look for the class field using efficient selector
+			const fieldLabels = panel.querySelectorAll('[class*="field"] > label, [class*="control"] > label, .etch-label, label');
+			for (const label of fieldLabels) {
+				if (label.textContent && label.textContent.trim().toLowerCase() === 'class') {
+					const container = label.closest('[class*="field"], [class*="control"], label');
+					if (container) return container;
+				}
+			}
+
+			// Fallback: return the last label/field
+			return fieldLabels.length > 0 ? fieldLabels[fieldLabels.length - 1] : panel.firstElementChild;
 		}
 
 		/**
@@ -532,13 +718,13 @@
 			if (globalFocusPointCache.has(imageUrl)) {
 				return globalFocusPointCache.get(imageUrl);
 			}
-			
+
 			try {
 				const response = await fetch(
 					`${ajaxUrl}?action=mwe_get_global_focus_point&image_url=${encodeURIComponent(imageUrl)}&nonce=${nonce}`
 				);
 				const data = await response.json();
-				
+
 				if (data.success) {
 					const result = {
 						focusPoint: data.data.focus_point || null,
@@ -551,9 +737,51 @@
 			} catch (error) {
 				console.warn('MWE Focus Point: Failed to fetch global focus point', error);
 			}
-			
+
 			// Cache null result to avoid repeated failed requests
 			globalFocusPointCache.set(imageUrl, null);
+			return null;
+		}
+
+		// Cache for attachment data by ID
+		const attachmentDataCache = new Map();
+
+		/**
+		 * Fetch attachment data (URL and focus point) by attachment ID.
+		 * Returns { url, focusPoint } or null.
+		 * Results are cached by attachment ID.
+		 */
+		async function fetchAttachmentData(attachmentId) {
+			if (!attachmentId) return null;
+
+			const cacheKey = `attachment_${attachmentId}`;
+
+			// Check cache first
+			if (attachmentDataCache.has(cacheKey)) {
+				return attachmentDataCache.get(cacheKey);
+			}
+
+			try {
+				const response = await fetch(
+					`${ajaxUrl}?action=mwe_get_attachment_data&attachment_id=${attachmentId}&nonce=${nonce}`
+				);
+				const data = await response.json();
+
+				if (data.success) {
+					const result = {
+						url: data.data.url || null,
+						focusPoint: data.data.focus_point || null
+					};
+					// Cache the result
+					attachmentDataCache.set(cacheKey, result);
+					return result;
+				}
+			} catch (error) {
+				console.warn('MWE Focus Point: Failed to fetch attachment data', error);
+			}
+
+			// Cache null result to avoid repeated failed requests
+			attachmentDataCache.set(cacheKey, null);
 			return null;
 		}
 
