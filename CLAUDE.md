@@ -72,13 +72,13 @@ Customizable via `mwe_etchwp_processable_blocks` filter.
    gh release create vX.Y.Z --title "vX.Y.Z - Title" --notes "Release notes..."
    ```
 
-4. Create WordPress-compatible ZIP:
+4. Create WordPress-compatible ZIP and upload:
    ```bash
-   zip -r mwe-etchwp-enhancements.zip mwe-etchwp-enhancements -x "*.git*" "*.DS_Store"
-   gh release upload vX.Y.Z mwe-etchwp-enhancements.zip --clobber
+   ./scripts/release.sh
+   gh release upload vX.Y.Z ../mwe-etchwp-enhancements.zip --clobber
    ```
 
-**Critical**: GitHub auto-generates ZIPs with version-suffixed folders (`mwe-etchwp-enhancements-1.0.2/`) which WordPress treats as a new plugin. Always upload a properly structured ZIP as a release asset.
+**Critical**: Always use `scripts/release.sh` to create the ZIP! It excludes development files (vendor, tests, docs, composer files). GitHub auto-generates ZIPs with version-suffixed folders which WordPress treats as a new plugin.
 
 ## Configuration
 
