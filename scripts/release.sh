@@ -7,6 +7,9 @@
 # This script creates a WordPress-compatible ZIP file for distribution.
 # It excludes development files that should not be in the production release.
 #
+# IMPORTANT: The plugin-update-checker in vendor/ is a RUNTIME dependency
+# and MUST be included in the release!
+#
 
 set -e
 
@@ -27,18 +30,34 @@ if [ -f "$ZIP_FILE" ]; then
 fi
 
 # Create ZIP excluding development files
+# NOTE: vendor/plugin-update-checker is INCLUDED (runtime dependency)
+#       Other vendor packages (phpunit, brain/monkey, etc.) are excluded
 cd "$PARENT_DIR"
 zip -r "$ZIP_FILE" "$PLUGIN_SLUG" \
     -x "*.git*" \
     -x "*.DS_Store" \
-    -x "*vendor/*" \
     -x "*node_modules/*" \
     -x "*tests/*" \
     -x "*phpunit.xml*" \
     -x "*composer.*" \
     -x "*docs/*" \
     -x "*.phpunit.result.cache" \
-    -x "*scripts/*"
+    -x "*scripts/*" \
+    -x "*vendor/antecedent/*" \
+    -x "*vendor/bin/*" \
+    -x "*vendor/brain/*" \
+    -x "*vendor/composer/*" \
+    -x "*vendor/doctrine/*" \
+    -x "*vendor/hamcrest/*" \
+    -x "*vendor/mockery/*" \
+    -x "*vendor/myclabs/*" \
+    -x "*vendor/nikic/*" \
+    -x "*vendor/phar-io/*" \
+    -x "*vendor/phpunit/*" \
+    -x "*vendor/sebastian/*" \
+    -x "*vendor/theseer/*" \
+    -x "*vendor/yoast/*" \
+    -x "*vendor/autoload.php"
 
 echo ""
 echo "✓ Release ZIP created: $ZIP_FILE"
