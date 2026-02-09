@@ -173,8 +173,9 @@ class Plugin {
 			$this->image_enhancement->init();
 		}
 
-		// Initialize Focus Position features.
-		if ( $this->is_focus_position_enabled() ) {
+		// Initialize Focus Position features only if enabled AND a focus plugin is active.
+		// Without a focus plugin, there's no source for focus point data.
+		if ( $this->is_focus_position_enabled() && $this->is_any_focus_plugin_active() ) {
 			// Core focus position (render_block filter).
 			$this->focus_position = Focus_Position::get_instance();
 			$this->focus_position->init();
