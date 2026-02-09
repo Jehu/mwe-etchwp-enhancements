@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.2.6
+Stable tag: 1.2.7
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -105,6 +105,11 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 == Changelog ==
 
+= 1.2.7 =
+* Fixed: Focus points now work for external image URLs (not just wp-content/uploads)
+* Fixed: PHP 8.5 deprecation warnings in test suite (removed unnecessary setAccessible calls)
+* Added: Tests for external URL focus point handling
+
 = 1.2.6 =
 * Improved: Consolidated attachment ID lookups into central Helper method with caching
 * Improved: Consolidated duplicate get_current_post_id() methods into Helper class
@@ -185,6 +190,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.2.7 =
+Focus points now work for external images (CDN, external URLs). Previously only wp-content/uploads images were supported.
 
 = 1.2.6 =
 Internal code quality improvements: Consolidated duplicate code, better caching, more tests. No breaking changes.

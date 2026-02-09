@@ -302,6 +302,11 @@ This plugin follows:
 
 ## Changelog
 
+### 1.2.7 - 2026-02-09
+- **Fixed:** Focus points now work for external image URLs (not just wp-content/uploads)
+- **Fixed:** PHP 8.5 deprecation warnings in test suite (removed unnecessary setAccessible calls)
+- **Added:** Tests for external URL focus point handling
+
 ### 1.2.6 - 2026-02-09
 - **Improved:** Consolidated attachment ID lookups into central `Helper::get_attachment_id_from_url()` method with caching
 - **Improved:** Consolidated duplicate `get_current_post_id()` methods into `Helper` class

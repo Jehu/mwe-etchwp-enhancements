@@ -37,10 +37,7 @@ class FocusPositionTest extends TestCase {
 	 */
 	private function getAddFocusMethod(): \ReflectionMethod {
 		$reflection = new ReflectionClass( \MWE\EtchWP_Enhancements\Focus_Position::class );
-		$method     = $reflection->getMethod( 'add_focus_to_image' );
-		$method->setAccessible( true );
-
-		return $method;
+		return $reflection->getMethod( 'add_focus_to_image' );
 	}
 
 	/**
@@ -194,5 +191,72 @@ class FocusPositionTest extends TestCase {
 
 		$this->assertStringContainsString( 'width: 100%', $result );
 		$this->assertStringContainsString( 'object-position: 30% 70%', $result );
+	}
+
+	/**
+	 * Test that external URLs with per-page override get focus point applied.
+	 */
+	public function test_external_url_with_override_gets_focus_point(): void {
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
+		Functions\when( 'attachment_url_to_postid' )->justReturn( 0 ); // Not found in WP.
+
+		// Mock post meta to return override for this external URL.
+		$external_url = 'https://external-cdn.com/images/hero.jpg';
+		$url_key      = 'url_' . md5( $external_url );
+
+		// Simulate per-page override stored in post meta.
+		Functions\when( 'get_post_meta' )->justReturn( array( $url_key => '25% 75%' ) );
+
+		// Mock WP_Post for get_current_post_id.
+		$mock_post     = \Mockery::mock( 'WP_Post' );
+		$mock_post->ID = 1;
+		$GLOBALS['post'] = $mock_post;
+
+		Functions\when( 'get_queried_object' )->justReturn( null );
+
+		$method   = $this->getAddFocusMethod();
+		$instance = $this->getInstance();
+
+		$matches = array(
+			0 => '<img src="' . $external_url . '" alt="External">',
+			1 => 'img',
+			2 => ' ',
+			3 => $external_url,
+			4 => ' alt="External"',
+		);
+
+		$result = $method->invoke( $instance, $matches );
+
+		$this->assertStringContainsString( 'object-position: 25% 75%', $result );
+	}
+
+	/**
+	 * Test that external URLs without override return original tag.
+	 */
+	public function test_external_url_without_override_returns_original(): void {
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
+		Functions\when( 'attachment_url_to_postid' )->justReturn( 0 );
+		Functions\when( 'get_post_meta' )->justReturn( array() ); // No overrides.
+		Functions\when( 'get_queried_object' )->justReturn( null );
+
+		$GLOBALS['post'] = (object) array( 'ID' => 1 );
+
+		$method   = $this->getAddFocusMethod();
+		$instance = $this->getInstance();
+
+		$external_url = 'https://external-cdn.com/images/photo.jpg';
+		$original     = '<img src="' . $external_url . '" alt="External">';
+		$matches      = array(
+			0 => $original,
+			1 => 'img',
+			2 => ' ',
+			3 => $external_url,
+			4 => ' alt="External"',
+		);
+
+		$result = $method->invoke( $instance, $matches );
+
+		// Should return unchanged (no override, no attachment).
+		$this->assertEquals( $original, $result );
 	}
 }

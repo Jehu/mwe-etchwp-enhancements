@@ -38,7 +38,6 @@ class HelperTest extends TestCase {
 	private function resetAttachmentCache(): void {
 		$reflection = new ReflectionClass( Helper::class );
 		$property   = $reflection->getProperty( 'attachment_cache' );
-		$property->setAccessible( true );
 		$property->setValue( null, array() );
 	}
 

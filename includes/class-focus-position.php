@@ -117,8 +117,10 @@ class Focus_Position {
 		}
 
 		// Apply focus points to images in the block content (both <img> and <etch:img>).
+		// Match all images with src attribute - both local (wp-content/uploads) and external URLs.
+		// Focus points are applied if: 1) per-page override exists, or 2) attachment has focus point meta.
 		$block_content = preg_replace_callback(
-			'/<(img|etch:img)([^>]+)src=["\']([^"\']*wp-content\/uploads[^"\']*)["\']([^>]*)>/i',
+			'/<(img|etch:img)([^>]+)src=["\']([^"\']+)["\']([^>]*)>/i',
 			array( $this, 'add_focus_to_image' ),
 			$block_content
 		);

@@ -27,10 +27,7 @@ class FocusPointValidationTest extends TestCase {
 		require_once dirname( __DIR__, 2 ) . '/includes/class-focus-ajax.php';
 
 		$reflection = new ReflectionClass( \MWE\EtchWP_Enhancements\Focus_Ajax::class );
-		$method     = $reflection->getMethod( 'is_valid_focus_point' );
-		$method->setAccessible( true );
-
-		return $method;
+		return $reflection->getMethod( 'is_valid_focus_point' );
 	}
 
 	/**
