@@ -126,7 +126,7 @@ class Focus_Editor_UI {
 		);
 
 		// Get current post ID.
-		$post_id = $this->get_current_post_id();
+		$post_id = Helper::get_current_post_id();
 
 		// Localize script with necessary data.
 		wp_localize_script(
@@ -151,32 +151,4 @@ class Focus_Editor_UI {
 		);
 	}
 
-	/**
-	 * Get the current post ID from various sources.
-	 *
-	 * @since  1.1.0
-	 * @return int The post ID or 0.
-	 */
-	private function get_current_post_id(): int {
-		// Try from query parameter.
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( isset( $_GET['post_id'] ) ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			return absint( $_GET['post_id'] );
-		}
-
-		// Try from global post.
-		global $post;
-		if ( $post instanceof \WP_Post ) {
-			return $post->ID;
-		}
-
-		// Try from queried object.
-		$queried = get_queried_object();
-		if ( $queried instanceof \WP_Post ) {
-			return $queried->ID;
-		}
-
-		return 0;
-	}
 }

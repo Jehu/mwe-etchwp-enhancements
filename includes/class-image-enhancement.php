@@ -44,9 +44,9 @@ class Image_Enhancement {
 	 * Ensures only one instance of Image_Enhancement is loaded or can be loaded.
 	 *
 	 * @since  1.0.0
-	 * @return Image_Enhancement Main instance.
+	 * @return self Main instance.
 	 */
-	public static function get_instance() {
+	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
 		}
@@ -131,13 +131,8 @@ class Image_Enhancement {
 			return $full_tag;
 		}
 
-		// Try to get attachment ID from src URL.
-		$attachment_id = attachment_url_to_postid( $src );
-
-		// If that fails, try a more comprehensive search.
-		if ( ! $attachment_id ) {
-			$attachment_id = Helper::find_attachment_by_filename( $src );
-		}
+		// Get attachment ID from URL (uses caching and comprehensive lookup).
+		$attachment_id = Helper::get_attachment_id_from_url( $src );
 
 		if ( ! $attachment_id ) {
 			return $full_tag;

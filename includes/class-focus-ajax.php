@@ -289,13 +289,8 @@ class Focus_Ajax {
 			wp_send_json_error( array( 'message' => 'Missing image_url' ), 400 );
 		}
 
-		// Try to get attachment ID from URL.
-		$attachment_id = attachment_url_to_postid( $image_url );
-
-		// If that fails, try with the Helper class.
-		if ( ! $attachment_id && class_exists( 'MWE\\EtchWP_Enhancements\\Helper' ) ) {
-			$attachment_id = Helper::find_attachment_by_filename( $image_url );
-		}
+		// Get attachment ID from URL (uses caching and comprehensive lookup).
+		$attachment_id = Helper::get_attachment_id_from_url( $image_url );
 
 		if ( ! $attachment_id ) {
 			wp_send_json_success(

@@ -99,9 +99,9 @@ class Plugin {
 	 * Ensures only one instance of Plugin is loaded or can be loaded.
 	 *
 	 * @since  1.0.0
-	 * @return Plugin Main instance.
+	 * @return self Main instance.
 	 */
-	public static function get_instance() {
+	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
 		}

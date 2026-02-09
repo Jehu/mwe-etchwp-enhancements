@@ -40,6 +40,79 @@ class Helper {
 	private static $attachment_cache = array();
 
 	/**
+	 * Get attachment ID from URL with intelligent caching.
+	 *
+	 * This method consolidates attachment lookups by:
+	 * 1. Checking the runtime cache first
+	 * 2. Trying WordPress core function (faster for direct URLs)
+	 * 3. Falling back to comprehensive filename search
+	 *
+	 * @since  1.2.6
+	 * @param  string $url The image URL.
+	 * @return int|null    The attachment ID or null if not found.
+	 */
+	public static function get_attachment_id_from_url( string $url ): ?int {
+		// Check cache first.
+		if ( array_key_exists( $url, self::$attachment_cache ) ) {
+			return self::$attachment_cache[ $url ];
+		}
+
+		// Validate URL has uploads path.
+		$parsed_url = wp_parse_url( $url );
+		$path       = $parsed_url['path'] ?? '';
+
+		if ( false === strpos( $path, 'wp-content/uploads' ) ) {
+			self::$attachment_cache[ $url ] = null;
+			return null;
+		}
+
+		// Try WordPress core first (faster for direct URLs).
+		$id = attachment_url_to_postid( $url );
+
+		// Fall back to comprehensive filename search if core function fails.
+		if ( ! $id ) {
+			$id = self::find_attachment_by_filename( $url );
+		}
+
+		self::$attachment_cache[ $url ] = $id ?: null;
+		return $id ?: null;
+	}
+
+	/**
+	 * Get the current post ID from various sources.
+	 *
+	 * Checks in order:
+	 * 1. Query parameter (post_id)
+	 * 2. Global $post
+	 * 3. Queried object
+	 *
+	 * @since  1.2.6
+	 * @return int The post ID or 0 if not found.
+	 */
+	public static function get_current_post_id(): int {
+		// Try from query parameter first (e.g., Etch canvas).
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Reading-only check, no data modification.
+		if ( isset( $_GET['post_id'] ) ) {
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return absint( $_GET['post_id'] );
+		}
+
+		// Try from global post.
+		global $post;
+		if ( $post instanceof \WP_Post ) {
+			return $post->ID;
+		}
+
+		// Try from queried object.
+		$queried = get_queried_object();
+		if ( $queried instanceof \WP_Post ) {
+			return $queried->ID;
+		}
+
+		return 0;
+	}
+
+	/**
 	 * Check if a block type should be processed for image enhancement.
 	 *
 	 * This method determines which Etch block types contain images and should

@@ -44,9 +44,9 @@ class Focus_Position {
 	 * Ensures only one instance of Focus_Position is loaded or can be loaded.
 	 *
 	 * @since  1.0.0
-	 * @return Focus_Position Main instance.
+	 * @return self Main instance.
 	 */
-	public static function get_instance() {
+	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
 		}
@@ -139,15 +139,10 @@ class Focus_Position {
 		$src      = $matches[3]; // src is now in position 3 due to tag capture group
 
 		// Get current post ID for override lookup.
-		$post_id = $this->get_current_post_id();
+		$post_id = Helper::get_current_post_id();
 
-		// Try to get attachment ID from src URL.
-		$attachment_id = attachment_url_to_postid( $src );
-
-		// If that fails, try a more comprehensive search.
-		if ( ! $attachment_id ) {
-			$attachment_id = Helper::find_attachment_by_filename( $src );
-		}
+		// Get attachment ID from URL (uses caching and comprehensive lookup).
+		$attachment_id = Helper::get_attachment_id_from_url( $src );
 
 		// Determine the image key for override lookup.
 		$image_key = $attachment_id
@@ -216,24 +211,4 @@ class Focus_Position {
 		return Focus_Ajax::get_instance()->get_override( $post_id, $image_key );
 	}
 
-	/**
-	 * Get the current post ID.
-	 *
-	 * @since  1.1.0
-	 * @return int The post ID or 0.
-	 */
-	private function get_current_post_id(): int {
-		global $post;
-
-		if ( $post instanceof \WP_Post ) {
-			return $post->ID;
-		}
-
-		$queried = get_queried_object();
-		if ( $queried instanceof \WP_Post ) {
-			return $queried->ID;
-		}
-
-		return 0;
-	}
 }

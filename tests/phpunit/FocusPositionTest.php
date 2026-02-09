@@ -57,6 +57,7 @@ class FocusPositionTest extends TestCase {
 	 */
 	public function test_adds_object_position_with_focus_point(): void {
 		// Mock WordPress functions.
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
 		Functions\when( 'attachment_url_to_postid' )->justReturn( 123 );
 		Functions\when( 'get_post_meta' )->justReturn( '30% 70%' );
 		Functions\when( 'get_queried_object' )->justReturn( null );
@@ -67,11 +68,14 @@ class FocusPositionTest extends TestCase {
 		$method   = $this->getAddFocusMethod();
 		$instance = $this->getInstance();
 
+		// Regex pattern: /<(img|etch:img)([^>]+)src=["\']([^"\']*wp-content\/uploads[^"\']*)["\']([^>]*)>/i
+		// Matches: [0]=full tag, [1]=tag name, [2]=attrs before src, [3]=src URL, [4]=attrs after src
 		$matches = array(
 			0 => '<img src="https://example.com/wp-content/uploads/image.jpg" alt="Test">',
-			1 => ' ',
-			2 => 'https://example.com/wp-content/uploads/image.jpg',
-			3 => ' alt="Test"',
+			1 => 'img',
+			2 => ' ',
+			3 => 'https://example.com/wp-content/uploads/image.jpg',
+			4 => ' alt="Test"',
 		);
 
 		$result = $method->invoke( $instance, $matches );
@@ -83,6 +87,7 @@ class FocusPositionTest extends TestCase {
 	 * Test that original tag is returned when no focus point exists.
 	 */
 	public function test_returns_original_when_no_focus_point(): void {
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
 		Functions\when( 'attachment_url_to_postid' )->justReturn( 123 );
 		Functions\when( 'get_post_meta' )->justReturn( '' );
 		Functions\when( 'get_queried_object' )->justReturn( null );
@@ -95,9 +100,10 @@ class FocusPositionTest extends TestCase {
 		$original = '<img src="https://example.com/wp-content/uploads/image.jpg" alt="Test">';
 		$matches  = array(
 			0 => $original,
-			1 => ' ',
-			2 => 'https://example.com/wp-content/uploads/image.jpg',
-			3 => ' alt="Test"',
+			1 => 'img',
+			2 => ' ',
+			3 => 'https://example.com/wp-content/uploads/image.jpg',
+			4 => ' alt="Test"',
 		);
 
 		$result = $method->invoke( $instance, $matches );
@@ -109,6 +115,7 @@ class FocusPositionTest extends TestCase {
 	 * Test that 50% 50% (default center) returns original tag.
 	 */
 	public function test_returns_original_for_center_position(): void {
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
 		Functions\when( 'attachment_url_to_postid' )->justReturn( 123 );
 		Functions\when( 'get_post_meta' )->justReturn( '50% 50%' );
 		Functions\when( 'get_queried_object' )->justReturn( null );
@@ -121,9 +128,10 @@ class FocusPositionTest extends TestCase {
 		$original = '<img src="https://example.com/wp-content/uploads/image.jpg" alt="Test">';
 		$matches  = array(
 			0 => $original,
-			1 => ' ',
-			2 => 'https://example.com/wp-content/uploads/image.jpg',
-			3 => ' alt="Test"',
+			1 => 'img',
+			2 => ' ',
+			3 => 'https://example.com/wp-content/uploads/image.jpg',
+			4 => ' alt="Test"',
 		);
 
 		$result = $method->invoke( $instance, $matches );
@@ -135,6 +143,7 @@ class FocusPositionTest extends TestCase {
 	 * Test that existing object-position is not overwritten.
 	 */
 	public function test_does_not_overwrite_existing_object_position(): void {
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
 		Functions\when( 'attachment_url_to_postid' )->justReturn( 123 );
 		Functions\when( 'get_post_meta' )->justReturn( '30% 70%' );
 		Functions\when( 'get_queried_object' )->justReturn( null );
@@ -147,9 +156,10 @@ class FocusPositionTest extends TestCase {
 		$original = '<img src="https://example.com/wp-content/uploads/image.jpg" style="object-position: 10% 90%" alt="Test">';
 		$matches  = array(
 			0 => $original,
-			1 => ' ',
-			2 => 'https://example.com/wp-content/uploads/image.jpg',
-			3 => ' style="object-position: 10% 90%" alt="Test"',
+			1 => 'img',
+			2 => ' ',
+			3 => 'https://example.com/wp-content/uploads/image.jpg',
+			4 => ' style="object-position: 10% 90%" alt="Test"',
 		);
 
 		$result = $method->invoke( $instance, $matches );
@@ -162,6 +172,7 @@ class FocusPositionTest extends TestCase {
 	 * Test that style attribute is appended when it exists.
 	 */
 	public function test_appends_to_existing_style(): void {
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
 		Functions\when( 'attachment_url_to_postid' )->justReturn( 123 );
 		Functions\when( 'get_post_meta' )->justReturn( '30% 70%' );
 		Functions\when( 'get_queried_object' )->justReturn( null );
@@ -173,9 +184,10 @@ class FocusPositionTest extends TestCase {
 
 		$matches = array(
 			0 => '<img src="https://example.com/wp-content/uploads/image.jpg" style="width: 100%">',
-			1 => ' ',
-			2 => 'https://example.com/wp-content/uploads/image.jpg',
-			3 => ' style="width: 100%"',
+			1 => 'img',
+			2 => ' ',
+			3 => 'https://example.com/wp-content/uploads/image.jpg',
+			4 => ' style="width: 100%"',
 		);
 
 		$result = $method->invoke( $instance, $matches );

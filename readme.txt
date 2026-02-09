@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.2.5
+Stable tag: 1.2.6
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -105,6 +105,13 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 == Changelog ==
 
+= 1.2.6 =
+* Improved: Consolidated attachment ID lookups into central Helper method with caching
+* Improved: Consolidated duplicate get_current_post_id() methods into Helper class
+* Improved: Added type declarations for get_instance() methods (PHP 8.1+)
+* Added: Comprehensive test coverage for Helper and Image_Enhancement classes
+* Code quality: Reduced code duplication, better maintainability
+
 = 1.2.5 =
 * Added: Support for GitHub Personal Access Token to avoid API rate limits
 * Fixed: "Could not determine if updates are available" error caused by GitHub API rate limiting
@@ -178,6 +185,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.2.6 =
+Internal code quality improvements: Consolidated duplicate code, better caching, more tests. No breaking changes.
 
 = 1.2.3 =
 Confirmed compatibility with Etch 1.0.0-rc-7. No code changes required.
