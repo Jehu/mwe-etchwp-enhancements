@@ -10,16 +10,31 @@
 (function() {
 	'use strict';
 
+	// Bail out if running inside an iframe (e.g., Etch canvas).
+	// This script is designed for the outer builder page only.
+	if (window.parent !== window) {
+		return;
+	}
+
 	/**
 	 * Wait for config to be available.
+	 * Gives up after a reasonable timeout to avoid polling indefinitely.
 	 */
+	const MAX_CONFIG_WAIT_MS = 10000; // 10 seconds
+	const CONFIG_CHECK_INTERVAL_MS = 100;
 	function waitForConfig(callback) {
-		if (typeof mweFocusPointEditor !== 'undefined') {
-			callback();
-		} else {
-			// Check again after a short delay
-			setTimeout(() => waitForConfig(callback), 100);
+		const startTime = Date.now();
+		function check() {
+			if (typeof mweFocusPointEditor !== 'undefined') {
+				callback();
+			} else if (Date.now() - startTime > MAX_CONFIG_WAIT_MS) {
+				// Config never arrived — stop polling silently.
+				return;
+			} else {
+				setTimeout(check, CONFIG_CHECK_INTERVAL_MS);
+			}
 		}
+		check();
 	}
 
 	/**

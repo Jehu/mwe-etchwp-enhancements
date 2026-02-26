@@ -302,6 +302,12 @@ This plugin follows:
 
 ## Changelog
 
+### 1.2.8 - 2026-02-26
+- **Fixed:** AutomaticCSS styles not rendering in Etch builder canvas when plugin was active
+- **Fixed:** Focus point editor assets no longer injected into Etch canvas iframe (only loads on outer builder page)
+- **Improved:** Focus point editor JS now exits early if running inside an iframe
+- **Improved:** Config polling now times out after 10 seconds instead of polling indefinitely
+
 ### 1.2.7 - 2026-02-09
 - **Fixed:** Focus points now work for external image URLs (not just wp-content/uploads)
 - **Fixed:** PHP 8.5 deprecation warnings in test suite (removed unnecessary setAccessible calls)

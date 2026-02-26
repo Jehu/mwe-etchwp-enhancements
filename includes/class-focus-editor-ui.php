@@ -66,21 +66,12 @@ class Focus_Editor_UI {
 	 * @return void
 	 */
 	public function init(): void {
-		// Enqueue assets in Etch canvas.
-		add_action( 'etch/canvas/enqueue_assets', array( $this, 'enqueue_canvas_assets' ) );
-
-		// Also enqueue on frontend when Etch builder is active.
+		// Enqueue on the outer builder page when Etch builder is active.
+		// Note: We intentionally do NOT hook etch/canvas/enqueue_assets because
+		// our JS/CSS is for the outer builder page (sidebar UI), not the canvas
+		// iframe. Loading assets in the iframe interferes with third-party CSS
+		// (e.g., AutomaticCSS) that Etch collects for the iframe via that hook.
 		add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue_builder_assets' ) );
-	}
-
-	/**
-	 * Enqueue assets for Etch canvas.
-	 *
-	 * @since  1.1.0
-	 * @return void
-	 */
-	public function enqueue_canvas_assets(): void {
-		$this->enqueue_assets();
 	}
 
 	/**
