@@ -368,7 +368,7 @@
 
 				if (panel) {
 					// Verify this is for an image by checking if tag value is 'img'
-					const tagInput = panel.querySelector('input.etch-combobox__input, input[placeholder="Enter tag"]');
+					const tagInput = panel.querySelector('input.etch-combobox__input, .etch-combobox__input-wrapper input, input[placeholder="Enter tag"]');
 					const tagValue = tagInput ? tagInput.value.toLowerCase() : '';
 					const isImageTag = tagValue === 'img';
 

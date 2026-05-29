@@ -302,6 +302,11 @@ This plugin follows:
 
 ## Changelog
 
+### 1.2.9 - 2026-05-29
+- **Fixed:** Focus point editor tag detection in Etch 1.4.x (the `.etch-combobox__input` class was renamed to `.etch-combobox__input-wrapper`)
+- **Added:** Support for the new Etch 1.4.x combobox markup while remaining backward compatible with Etch 1.3.x and earlier
+- **Verified:** Compatibility with Etch 1.4.19 (block names, etch:img rendering, sidebar/properties selectors, iframe title, plugin detection)
+
 ### 1.2.8 - 2026-02-26
 - **Fixed:** AutomaticCSS styles not rendering in Etch builder canvas when plugin was active
 - **Fixed:** Focus point editor assets no longer injected into Etch canvas iframe (only loads on outer builder page)

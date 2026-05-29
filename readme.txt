@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.2.8
+Stable tag: 1.2.9
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -105,6 +105,11 @@ No, the plugin only modifies the HTML output. Your original images and their met
 
 == Changelog ==
 
+= 1.2.9 =
+* Fixed: Focus point editor tag detection in Etch 1.4.x (the `.etch-combobox__input` class was renamed to `.etch-combobox__input-wrapper`)
+* Added: Support for the new Etch 1.4.x combobox markup while remaining backward compatible with Etch 1.3.x and earlier
+* Verified: Compatibility with Etch 1.4.19 (block names, etch:img rendering, sidebar/properties selectors, iframe title, plugin detection)
+
 = 1.2.8 =
 * Fixed: AutomaticCSS styles not rendering in Etch builder canvas when plugin was active
 * Fixed: Focus point editor assets no longer injected into Etch canvas iframe (only loads on outer builder page)
@@ -196,6 +201,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.2.9 =
+Compatibility update for Etch 1.4.x. The focus point editor now detects the image tag input using the new combobox markup. Recommended if you use Etch 1.4 or later.
 
 = 1.2.8 =
 Fixes AutomaticCSS (ACSS) styles not rendering in Etch builder canvas. Update recommended if using ACSS with Etch.
