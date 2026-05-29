@@ -337,7 +337,35 @@
 			// Use Etch's actual class names: .etch-sidebar, .etch-sidebar__content-wrapper
 			const sidebar = document.querySelector('.etch-sidebar, .etch-sidebar__content-wrapper');
 
-			if (sidebar) {
+			// Dynamic Image element (etch/dynamic-image).
+			// Uniquely identified by its "src (Static URL - Optional/Fallback)" field.
+			// Its "WP Media ID" can hold a dynamic expression (e.g. {item.attachment_id})
+			// when used in a loop, which resolves to many different attachments and has no
+			// single image to target. Only show the picker when a fixed numeric Media ID is
+			// set; otherwise show an explanatory notice instead of a non-functional picker.
+			if (sidebar && isDynamicImagePanel(sidebar)) {
+				const fixedId = getDynamicImageFixedId(sidebar);
+				if (fixedId) {
+					// Fixed Media ID - reuse the etch:img picker path with this panel.
+					panel = sidebar;
+					isEtchImageElement = true;
+				} else {
+					// Loop expression or fallback-only - show notice, no picker.
+					// Remove any picker UI, but keep an existing notice to avoid an
+					// insert/observe feedback loop.
+					const existingPicker = document.querySelector('.mwe-focus-point-container');
+					if (existingPicker) {
+						existingPicker.remove();
+					}
+					if (!sidebar.querySelector('.mwe-focus-point-notice')) {
+						injectDynamicImageNotice(sidebar);
+					}
+					currentImageSrc = null;
+					return;
+				}
+			}
+
+			if (sidebar && !panel) {
 				// Look for WP Media ID label - this is unique to etch:img elements
 				const allLabels = sidebar.querySelectorAll('label');
 				for (const label of allLabels) {
@@ -432,9 +460,77 @@
 		 * Remove existing focus point UI.
 		 */
 		function removeExistingFocusUI() {
-			const existingUI = document.querySelector('.mwe-focus-point-container');
-			if (existingUI) {
-				existingUI.remove();
+			document.querySelectorAll('.mwe-focus-point-container, .mwe-focus-point-notice')
+				.forEach((el) => el.remove());
+		}
+
+		/**
+		 * Check whether the given scope contains a Dynamic Image (etch/dynamic-image)
+		 * settings panel. Identified by the field unique to that element.
+		 * @param {Element} scope - Element to search within.
+		 * @return {boolean}
+		 */
+		function isDynamicImagePanel(scope) {
+			const labels = scope.querySelectorAll('label');
+			for (const label of labels) {
+				if (label.textContent && label.textContent.trim() === 'src (Static URL - Optional/Fallback)') {
+					return true;
+				}
+			}
+			return false;
+		}
+
+		/**
+		 * Get the fixed numeric WP Media ID from a Dynamic Image panel.
+		 * Returns null when the field is empty or holds a dynamic expression
+		 * (e.g. {item.attachment_id}), since those have no single attachment to target.
+		 * @param {Element} scope - Element to search within.
+		 * @return {number|null}
+		 */
+		function getDynamicImageFixedId(scope) {
+			const labels = scope.querySelectorAll('label');
+			for (const label of labels) {
+				if (label.textContent && label.textContent.trim() === 'WP Media ID') {
+					const container = label.closest('label, [class*="field"], [class*="control"]') || label.parentElement;
+					const input = container ? container.querySelector('input') : null;
+					if (input) {
+						const value = (input.value || '').trim();
+						if (/^\d+$/.test(value)) {
+							return parseInt(value, 10);
+						}
+					}
+					return null;
+				}
+			}
+			return null;
+		}
+
+		/**
+		 * Inject an explanatory notice into a Dynamic Image panel when no fixed
+		 * Media ID is set. Tells the user where to set focus points for dynamic images.
+		 * @param {Element} panel - The panel element to inject into.
+		 */
+		function injectDynamicImageNotice(panel) {
+			const notice = document.createElement('div');
+			notice.className = 'mwe-focus-point-notice';
+
+			const title = document.createElement('span');
+			title.className = 'mwe-focus-point-notice-title';
+			title.textContent = i18n.focusPoint;
+
+			const text = document.createElement('p');
+			text.className = 'mwe-focus-point-notice-text';
+			text.textContent = i18n.dynamicImageNotice
+				|| 'This dynamic image resolves to different images. Set the focus point per image in the Media Library.';
+
+			notice.appendChild(title);
+			notice.appendChild(text);
+
+			const insertionPoint = findInsertionPoint(panel);
+			if (insertionPoint) {
+				insertionPoint.parentNode.insertBefore(notice, insertionPoint.nextSibling);
+			} else {
+				panel.appendChild(notice);
 			}
 		}
 

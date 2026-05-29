@@ -116,6 +116,8 @@ define( 'MWE_ETCHWP_FOCUS_POSITION', false );
 
 The Dynamic Image element in Etch already handles responsive image attributes (srcset, sizes, width, height) internally. This plugin only applies focus position styling to these images to avoid conflicts and duplicate processing.
 
+In the Etch builder, selecting a Dynamic Image shows the focus point picker when a fixed WP Media ID is set. When the image source is dynamic (e.g. a loop expression), the focus point cannot target a single attachment, so a notice points you to the Media Library to set it per image instead.
+
 ### Focus Position Process
 
 1. Reads focus point data from compatible plugins
@@ -301,6 +303,12 @@ This plugin follows:
 - Strict typing with `declare(strict_types=1)`
 
 ## Changelog
+
+### 1.2.10 - 2026-05-29
+- **Added:** Focus point editor support for the Etch Dynamic Image element (`etch/dynamic-image`)
+- **Added:** Picker is shown when a Dynamic Image has a fixed WP Media ID, reusing the etch:img focus point flow
+- **Added:** Explanatory notice for Dynamic Images with a dynamic source (e.g. loop expressions), directing users to set focus points per image in the Media Library
+- **Verified:** Regular image and etch:img pickers remain unaffected; no false detection of dynamic image panels
 
 ### 1.2.9 - 2026-05-29
 - **Fixed:** Focus point editor tag detection in Etch 1.4.x (the `.etch-combobox__input` class was renamed to `.etch-combobox__input-wrapper`)

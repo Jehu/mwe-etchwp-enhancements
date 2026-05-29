@@ -137,6 +137,7 @@ class Focus_Editor_UI {
 					'error'       => __( 'Error saving', 'mwe-etchwp-enhancements' ),
 					'override'    => __( 'Override', 'mwe-etchwp-enhancements' ),
 					'globalValue' => __( 'Global', 'mwe-etchwp-enhancements' ),
+					'dynamicImageNotice' => __( 'This dynamic image resolves to different images. Set the focus point per image in the Media Library.', 'mwe-etchwp-enhancements' ),
 				),
 			)
 		);

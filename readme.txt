@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.2.9
+Stable tag: 1.2.10
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -60,6 +60,8 @@ For focus position support, the plugin reads focus point data from compatible pl
 
 The Dynamic Image element in Etch already handles responsive image attributes (srcset, sizes, width, height) internally. This plugin only applies focus position styling to these images to avoid conflicts and duplicate processing.
 
+In the Etch builder, selecting a Dynamic Image shows the focus point picker when a fixed WP Media ID is set. When the image source is dynamic (e.g. a loop expression), the focus point cannot target a single attachment, so a notice points you to the Media Library to set it per image instead.
+
 == Installation ==
 
 1. Ensure the Etch page builder plugin is installed and activated
@@ -104,6 +106,12 @@ No, the plugin processes images during block rendering with minimal overhead. It
 No, the plugin only modifies the HTML output. Your original images and their metadata remain unchanged.
 
 == Changelog ==
+
+= 1.2.10 =
+* Added: Focus point editor support for the Etch Dynamic Image element (`etch/dynamic-image`)
+* Added: Picker is shown when a Dynamic Image has a fixed WP Media ID, reusing the etch:img focus point flow
+* Added: Explanatory notice for Dynamic Images with a dynamic source (e.g. loop expressions), directing users to set focus points per image in the Media Library
+* Verified: Regular image and etch:img pickers remain unaffected; no false detection of dynamic image panels
 
 = 1.2.9 =
 * Fixed: Focus point editor tag detection in Etch 1.4.x (the `.etch-combobox__input` class was renamed to `.etch-combobox__input-wrapper`)
@@ -201,6 +209,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.2.10 =
+The focus point editor now works with Etch Dynamic Image elements: a picker for fixed Media IDs and a helpful notice for dynamic sources. Recommended if you use Dynamic Image elements.
 
 = 1.2.9 =
 Compatibility update for Etch 1.4.x. The focus point editor now detects the image tag input using the new combobox markup. Recommended if you use Etch 1.4 or later.

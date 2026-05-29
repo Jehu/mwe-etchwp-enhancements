@@ -189,3 +189,27 @@
 .mwe-focus-point-marker.pulse {
 	animation: mwe-focus-pulse 0.3s ease;
 }
+
+/* Dynamic Image notice (shown when no fixed Media ID is set) */
+.mwe-focus-point-notice {
+	padding: 12px;
+	margin: 8px 0;
+	background: var(--e-base-light, #2a2a2e);
+	border-radius: var(--e-border-radius, 6px);
+	border: 1px solid var(--e-border-color, #3a3a3e);
+}
+
+.mwe-focus-point-notice-title {
+	display: block;
+	font-size: var(--e-font-size-m, 12px);
+	font-weight: 600;
+	color: var(--e-foreground-color, #e0e0e4);
+	margin-bottom: 6px;
+}
+
+.mwe-focus-point-notice-text {
+	margin: 0;
+	font-size: var(--e-font-size-s, 11px);
+	line-height: 1.5;
+	color: var(--e-foreground-color-muted, #a0a0a4);
+}
