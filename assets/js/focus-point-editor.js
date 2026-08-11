@@ -842,7 +842,6 @@
 						focusPoint: data.data.focus_point || null,
 						attachmentId: data.data.attachment_id || null
 					};
-					// Cache the result
 					globalFocusPointCache.set(imageUrl, result);
 					return result;
 				}
@@ -850,13 +849,12 @@
 				console.warn('MWE Focus Point: Failed to fetch global focus point', error);
 			}
 
-			// Cache null result to avoid repeated failed requests
 			globalFocusPointCache.set(imageUrl, null);
 			return null;
 		})();
-			globalFocusPointCache.set(imageUrl, inflight);
-			return inflight;
-		}
+		globalFocusPointCache.set(imageUrl, inflight);
+		return inflight;
+	}
 
 		// Cache for attachment data by ID
 		const attachmentDataCache = new Map();
@@ -888,7 +886,6 @@
 						url: data.data.url || null,
 						focusPoint: data.data.focus_point || null
 					};
-					// Cache the result
 					attachmentDataCache.set(cacheKey, result);
 					return result;
 				}
@@ -896,13 +893,12 @@
 				console.warn('MWE Focus Point: Failed to fetch attachment data', error);
 			}
 
-			// Cache null result to avoid repeated failed requests
 			attachmentDataCache.set(cacheKey, null);
 			return null;
 		})();
-			attachmentDataCache.set(cacheKey, inflight);
-			return inflight;
-		}
+		attachmentDataCache.set(cacheKey, inflight);
+		return inflight;
+	}
 
 		/**
 		 * Parse position string to x/y values.
