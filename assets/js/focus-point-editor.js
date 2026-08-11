@@ -830,6 +830,7 @@
 				return globalFocusPointCache.get(imageUrl);
 			}
 
+			const inflight = (async () => {
 			try {
 				const response = await fetch(
 					`${ajaxUrl}?action=mwe_get_global_focus_point&image_url=${encodeURIComponent(imageUrl)}&nonce=${nonce}`
@@ -852,6 +853,9 @@
 			// Cache null result to avoid repeated failed requests
 			globalFocusPointCache.set(imageUrl, null);
 			return null;
+		})();
+			globalFocusPointCache.set(imageUrl, inflight);
+			return inflight;
 		}
 
 		// Cache for attachment data by ID
@@ -872,6 +876,7 @@
 				return attachmentDataCache.get(cacheKey);
 			}
 
+			const inflight = (async () => {
 			try {
 				const response = await fetch(
 					`${ajaxUrl}?action=mwe_get_attachment_data&attachment_id=${attachmentId}&nonce=${nonce}`
@@ -894,6 +899,9 @@
 			// Cache null result to avoid repeated failed requests
 			attachmentDataCache.set(cacheKey, null);
 			return null;
+		})();
+			attachmentDataCache.set(cacheKey, inflight);
+			return inflight;
 		}
 
 		/**
