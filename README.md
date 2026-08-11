@@ -304,6 +304,11 @@ This plugin follows:
 
 ## Changelog
 
+### 1.2.11 - 2026-08-11
+- **Fixed:** AJAX request deduplication in focus point editor - concurrent requests for the same image now share a single request instead of firing duplicates
+- **Fixed:** Combobox selector compatibility with Etch 1.6.x (updated from `.etch-combobox__input` to `.etch-combobox__native-input`)
+- **Improved:** Code style in promise caching functions
+
 ### 1.2.10 - 2026-05-29
 - **Added:** Focus point editor support for the Etch Dynamic Image element (`etch/dynamic-image`)
 - **Added:** Picker is shown when a Dynamic Image has a fixed WP Media ID, reusing the etch:img focus point flow

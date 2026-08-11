@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.2.10
+Stable tag: 1.2.11
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -106,6 +106,11 @@ No, the plugin processes images during block rendering with minimal overhead. It
 No, the plugin only modifies the HTML output. Your original images and their metadata remain unchanged.
 
 == Changelog ==
+
+= 1.2.11 =
+* Fixed: AJAX request deduplication in focus point editor - concurrent requests for the same image now share a single request instead of firing duplicates
+* Fixed: Combobox selector compatibility with Etch 1.6.x (updated from `.etch-combobox__input` to `.etch-combobox__native-input`)
+* Improved: Code style in promise caching functions
 
 = 1.2.10 =
 * Added: Focus point editor support for the Etch Dynamic Image element (`etch/dynamic-image`)
@@ -209,6 +214,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.2.11 =
+Performance improvement: AJAX request deduplication reduces redundant network calls when multiple image elements reference the same source. Also includes Etch 1.6.x compatibility fixes.
 
 = 1.2.10 =
 The focus point editor now works with Etch Dynamic Image elements: a picker for fixed Media IDs and a helpful notice for dynamic sources. Recommended if you use Dynamic Image elements.
