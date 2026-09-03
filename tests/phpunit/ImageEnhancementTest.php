@@ -201,4 +201,85 @@ class ImageEnhancementTest extends TestCase {
 		$this->assertStringContainsString( 'data-decorative="true"', $result );
 		$this->assertStringNotContainsString( 'alt="-"', $result );
 	}
+	/**
+	 * Test init keeps core auto-sizes on and registers the per-image guard instead.
+	 */
+	public function test_init_registers_auto_sizes_guard_instead_of_global_disable(): void {
+		Functions\when( 'apply_filters' )->returnArg( 2 );
+		Monkey\Filters\expectAdded( 'render_block' )->once();
+		Monkey\Filters\expectAdded( 'wp_content_img_tag' )->once();
+		Monkey\Filters\expectAdded( 'wp_img_tag_add_auto_sizes' )->never();
+
+		$this->getInstance()->init();
+	}
+
+	/**
+	 * Test the global disable can be restored via filter.
+	 */
+	public function test_init_can_restore_global_auto_sizes_disable_via_filter(): void {
+		Functions\when( 'apply_filters' )->alias(
+			static function ( $hook, $value ) {
+				return 'mwe_etchwp_disable_auto_sizes' === $hook ? true : $value;
+			}
+		);
+		Monkey\Filters\expectAdded( 'render_block' )->once();
+		Monkey\Filters\expectAdded( 'wp_img_tag_add_auto_sizes' )->once()->with( '__return_false' );
+		Monkey\Filters\expectAdded( 'wp_content_img_tag' )->never();
+
+		$this->getInstance()->init();
+	}
+
+	/**
+	 * Test guard_auto_sizes strips `auto` from attribute-sized (small) images.
+	 */
+	public function test_guard_auto_sizes_strips_auto_from_small_images(): void {
+		Functions\when( 'apply_filters' )->returnArg( 2 );
+
+		$tag    = '<img src="https://example.com/wp-content/uploads/arrow.png" width="56" height="16" loading="lazy" sizes="auto, (max-width: 56px) 100vw, 56px">';
+		$result = $this->getInstance()->guard_auto_sizes( $tag, 'the_content', 123 );
+
+		$this->assertStringContainsString( 'sizes="(max-width: 56px) 100vw, 56px"', $result );
+		$this->assertStringNotContainsString( 'auto', $result );
+	}
+
+	/**
+	 * Test guard_auto_sizes keeps `auto` on content-sized images.
+	 */
+	public function test_guard_auto_sizes_keeps_auto_on_content_images(): void {
+		Functions\when( 'apply_filters' )->returnArg( 2 );
+
+		$tag    = '<img src="https://example.com/wp-content/uploads/hero.jpg" width="1920" height="1080" loading="lazy" sizes="auto, (max-width: 1920px) 100vw, 1920px">';
+		$result = $this->getInstance()->guard_auto_sizes( $tag, 'the_content', 123 );
+
+		$this->assertSame( $tag, $result );
+	}
+
+	/**
+	 * Test guard_auto_sizes leaves images without `auto` (or without a width attribute) untouched.
+	 */
+	public function test_guard_auto_sizes_ignores_images_without_auto_or_width(): void {
+		Functions\when( 'apply_filters' )->returnArg( 2 );
+
+		$no_auto  = '<img src="https://example.com/wp-content/uploads/a.jpg" width="56" sizes="(max-width: 56px) 100vw, 56px">';
+		$no_width = '<img src="https://example.com/wp-content/uploads/a.jpg" loading="lazy" sizes="auto, (max-width: 56px) 100vw, 56px">';
+
+		$this->assertSame( $no_auto, $this->getInstance()->guard_auto_sizes( $no_auto, 'the_content', 1 ) );
+		$this->assertSame( $no_width, $this->getInstance()->guard_auto_sizes( $no_width, 'the_content', 1 ) );
+	}
+
+	/**
+	 * Test the threshold is filterable.
+	 */
+	public function test_guard_auto_sizes_respects_min_width_filter(): void {
+		Functions\when( 'apply_filters' )->alias(
+			static function ( $hook, $value ) {
+				return 'mwe_etchwp_auto_sizes_min_width' === $hook ? 400 : $value;
+			}
+		);
+
+		$tag    = '<img src="https://example.com/wp-content/uploads/card.jpg" width="300" height="200" loading="lazy" sizes="auto, (max-width: 300px) 100vw, 300px">';
+		$result = $this->getInstance()->guard_auto_sizes( $tag, 'the_content', 123 );
+
+		$this->assertStringContainsString( 'sizes="(max-width: 300px) 100vw, 300px"', $result );
+	}
 }

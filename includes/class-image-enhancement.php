@@ -72,8 +72,64 @@ class Image_Enhancement {
 		// Add support for Etch page builder - hook AFTER Etch processes images.
 		add_filter( 'render_block', array( $this, 'filter_images' ), 15, 2 );
 
-		// Disable automatic sizes attribute to have full control over responsive images.
-		add_filter( 'wp_img_tag_add_auto_sizes', '__return_false' );
+		/**
+		 * Filter whether to disable WordPress core's `sizes="auto, …"` for lazy-loaded images entirely.
+		 *
+		 * Before 1.2.12 the plugin always disabled it (`wp_img_tag_add_auto_sizes` → false), which
+		 * also switched it off for every image the plugin never touches (e.g. `etch/dynamic-image`).
+		 * The default now keeps core's behaviour and only guards attribute-sized images (see
+		 * `guard_auto_sizes()`). Return true to restore the old global behaviour.
+		 *
+		 * @since 1.2.12
+		 * @param bool $disable Whether to disable auto-sizes globally. Default false.
+		 */
+		if ( apply_filters( 'mwe_etchwp_disable_auto_sizes', false ) ) {
+			add_filter( 'wp_img_tag_add_auto_sizes', '__return_false' );
+			return;
+		}
+
+		// Core adds `auto` inside wp_filter_content_tags() and then hands every <img> to this filter.
+		add_filter( 'wp_content_img_tag', array( $this, 'guard_auto_sizes' ), 20, 3 );
+	}
+
+	/**
+	 * Remove core's `auto` sizes keyword from small, attribute-sized images.
+	 *
+	 * WordPress 6.7+ prepends `auto` to the sizes attribute of lazy-loaded images so the browser
+	 * picks a srcset candidate from the rendered width. That is right for content images, but an
+	 * image that relies on its width attribute for its size (a 56px icon, a slider arrow) has no
+	 * CSS box when `auto` is evaluated and gets laid out at container width. This strips `auto`
+	 * from images whose width attribute is below a threshold and leaves everything else alone.
+	 *
+	 * @since  1.2.12
+	 * @param  string $filtered_image The full <img> tag.
+	 * @param  string $context        Additional context (unused).
+	 * @param  int    $attachment_id  The attachment ID (unused).
+	 * @return string                 The (possibly modified) <img> tag.
+	 */
+	public function guard_auto_sizes( $filtered_image, $context = '', $attachment_id = 0 ) {
+		if ( ! is_string( $filtered_image ) || ! preg_match( '/\ssizes=["\']auto\s*,/i', $filtered_image ) ) {
+			return $filtered_image;
+		}
+
+		if ( ! preg_match( '/\swidth=["\'](\d+)["\']/i', $filtered_image, $matches ) ) {
+			return $filtered_image;
+		}
+
+		/**
+		 * Filter the width (in px, from the width attribute) below which an image is treated as
+		 * attribute-sized and loses core's `auto` sizes keyword.
+		 *
+		 * @since 1.2.12
+		 * @param int $min_width Minimum width attribute to keep `auto`. Default 150.
+		 */
+		$min_width = (int) apply_filters( 'mwe_etchwp_auto_sizes_min_width', 150 );
+
+		if ( (int) $matches[1] >= $min_width ) {
+			return $filtered_image;
+		}
+
+		return preg_replace( '/(\ssizes=["\'])auto\s*,\s*/i', '$1', $filtered_image, 1 );
 	}
 
 	/**
