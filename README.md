@@ -228,7 +228,7 @@ add_filter( 'mwe_etchwp_disable_auto_sizes', '__return_true' );
 
 #### `mwe_etchwp_auto_sizes_min_width`
 
-Width attribute (in px) below which an image is treated as attribute-sized and loses core's `auto` sizes keyword. Small images with no CSS sizing (icons, slider arrows) would otherwise be laid out at container width. Default `150`.
+Width attribute (in px) below which an image is treated as attribute-sized: the plugin writes no `srcset`/`sizes` attributes for it and it loses core's `auto` sizes keyword (via the `wp_content_img_tag` guard). Small images with no CSS sizing (icons, slider arrows) would otherwise be laid out at container width. Default `150`.
 
 ```php
 add_filter( 'mwe_etchwp_auto_sizes_min_width', function () {
