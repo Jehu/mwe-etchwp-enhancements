@@ -111,6 +111,7 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Fixed: AJAX request deduplication in focus point editor - concurrent requests for the same image now share a single request instead of firing duplicates
 * Fixed: Combobox selector compatibility with Etch 1.6.x (updated from `.etch-combobox__input` to `.etch-combobox__native-input`)
 * Improved: Code style in promise caching functions
+* Verified: Compatibility with Etch 1.6.7 (block names, HTML output, sidebar/properties/combobox selectors, WP Media ID label, plugin detection, iframe title, hook priorities)
 
 = 1.2.10 =
 * Added: Focus point editor support for the Etch Dynamic Image element (`etch/dynamic-image`)
