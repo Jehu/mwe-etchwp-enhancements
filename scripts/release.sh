@@ -41,6 +41,9 @@ zip -r "$ZIP_FILE" "$PLUGIN_SLUG" \
     -x "*phpunit.xml*" \
     -x "*composer.*" \
     -x "*docs/*" \
+    -x "*AGENTS.md" \
+    -x "*CLAUDE.md" \
+    -x "*phpcs.xml*" \
     -x "*.phpunit.result.cache" \
     -x "*scripts/*" \
     -x "*vendor/antecedent/*" \
@@ -64,4 +67,4 @@ echo "✓ Release ZIP created: $ZIP_FILE"
 echo "  Size: $(ls -lh "$ZIP_FILE" | awk '{print $5}')"
 echo ""
 echo "Contents:"
-unzip -l "$ZIP_FILE" | tail -n +4 | head -n -2
+unzip -l "$ZIP_FILE" | sed -e '1,3d' -e '$d' -e '$d'
