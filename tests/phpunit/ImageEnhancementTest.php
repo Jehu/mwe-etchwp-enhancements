@@ -282,4 +282,159 @@ class ImageEnhancementTest extends TestCase {
 
 		$this->assertStringContainsString( 'sizes="(max-width: 300px) 100vw, 300px"', $result );
 	}
+
+	/**
+	 * Test enhance_image skips srcset/sizes for attribute-sized images (issue #9)
+	 * while still adding width/height/alt.
+	 */
+	public function test_enhance_image_skips_responsive_attributes_for_small_images(): void {
+		Functions\when( 'apply_filters' )->returnArg( 2 );
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
+		Functions\when( 'attachment_url_to_postid' )->justReturn( 123 );
+		Functions\when( 'wp_get_attachment_metadata' )->justReturn( array(
+			'width'  => 56,
+			'height' => 16,
+		) );
+		Functions\when( 'get_post' )->justReturn( (object) array( 'ID' => 123 ) );
+		Functions\when( 'get_post_meta' )->justReturn( 'Arrow' );
+		Functions\when( 'wp_get_attachment_image_srcset' )->justReturn( 'arrow-32.png 32w, arrow-64.png 64w' );
+		Functions\when( 'wp_get_attachment_image_sizes' )->justReturn( '(max-width: 56px) 100vw, 56px' );
+
+		$instance = $this->getInstance();
+
+		$content = '<img src="https://example.com/wp-content/uploads/arrow.png">';
+		$block   = array( 'blockName' => 'etch/element' );
+
+		$result = $instance->filter_images( $content, $block );
+
+		// width/height/alt are still added.
+		$this->assertStringContainsString( 'width="56"', $result );
+		$this->assertStringContainsString( 'height="16"', $result );
+		$this->assertStringContainsString( 'alt="Arrow"', $result );
+		// srcset/sizes are not written for attribute-sized images.
+		$this->assertStringNotContainsString( 'srcset=', $result );
+		$this->assertStringNotContainsString( ' sizes=', $result );
+	}
+
+	/**
+	 * Test enhance_image keeps writing srcset/sizes for content-sized images (issue #9).
+	 */
+	public function test_enhance_image_writes_responsive_attributes_for_large_images(): void {
+		Functions\when( 'apply_filters' )->returnArg( 2 );
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
+		Functions\when( 'attachment_url_to_postid' )->justReturn( 123 );
+		Functions\when( 'wp_get_attachment_metadata' )->justReturn( array(
+			'width'  => 1920,
+			'height' => 1080,
+		) );
+		Functions\when( 'get_post' )->justReturn( (object) array( 'ID' => 123 ) );
+		Functions\when( 'get_post_meta' )->justReturn( 'Hero' );
+		Functions\when( 'wp_get_attachment_image_srcset' )->justReturn( 'hero-640.jpg 640w, hero-1920.jpg 1920w' );
+		Functions\when( 'wp_get_attachment_image_sizes' )->justReturn( '(max-width: 1920px) 100vw, 1920px' );
+
+		$instance = $this->getInstance();
+
+		$content = '<img src="https://example.com/wp-content/uploads/hero.jpg">';
+		$block   = array( 'blockName' => 'etch/element' );
+
+		$result = $instance->filter_images( $content, $block );
+
+		$this->assertStringContainsString( 'srcset=', $result );
+		$this->assertStringContainsString( 'sizes=', $result );
+	}
+
+	/**
+	 * Test the boundary: width == 150 keeps responsive attributes (>= semantics
+	 * shared with guard_auto_sizes), width == 149 loses them.
+	 */
+	public function test_enhance_image_threshold_boundary_150_keeps_149_skips(): void {
+		Functions\when( 'apply_filters' )->returnArg( 2 );
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
+		Functions\when( 'attachment_url_to_postid' )->justReturn( 123 );
+		foreach ( array( 150 => true, 149 => false ) as $width => $expect_responsive ) {
+			Functions\when( 'wp_get_attachment_metadata' )->justReturn( array(
+				'width'  => $width,
+				'height' => 100,
+			) );
+			Functions\when( 'get_post' )->justReturn( (object) array( 'ID' => 123 ) );
+			Functions\when( 'get_post_meta' )->justReturn( 'Boundary' );
+			Functions\when( 'wp_get_attachment_image_srcset' )->justReturn( 'img-300.jpg 300w, img-640.jpg 640w' );
+			Functions\when( 'wp_get_attachment_image_sizes' )->justReturn( '(max-width: ' . $width . 'px) 100vw, ' . $width . 'px' );
+
+			$content = '<img src="https://example.com/wp-content/uploads/img-' . $width . '.jpg">';
+			$block   = array( 'blockName' => 'etch/element' );
+			$result  = $this->getInstance()->filter_images( $content, $block );
+
+			if ( $expect_responsive ) {
+				$this->assertStringContainsString( 'srcset=', $result, 'width=' . $width . ' must keep srcset' );
+				$this->assertStringContainsString( 'sizes=', $result, 'width=' . $width . ' must keep sizes' );
+			} else {
+				$this->assertStringNotContainsString( 'srcset=', $result, 'width=' . $width . ' must not get srcset' );
+				$this->assertStringNotContainsString( ' sizes=', $result, 'width=' . $width . ' must not get sizes' );
+			}
+		}
+	}
+
+	/**
+	 * Test an existing explicit width attribute wins over the resolved intrinsic
+	 * width when classifying attribute-sized images (issue #9).
+	 */
+	public function test_enhance_image_existing_width_attribute_wins(): void {
+		Functions\when( 'apply_filters' )->returnArg( 2 );
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
+		Functions\when( 'attachment_url_to_postid' )->justReturn( 123 );
+		Functions\when( 'wp_get_attachment_metadata' )->justReturn( array(
+			'width'  => 1920, // Intrinsic width is large...
+			'height' => 1080,
+		) );
+		Functions\when( 'get_post' )->justReturn( (object) array( 'ID' => 123 ) );
+		Functions\when( 'get_post_meta' )->justReturn( 'Icon' );
+		Functions\when( 'wp_get_attachment_image_srcset' )->justReturn( 'icon-32.png 32w, icon-1920.png 1920w' );
+		Functions\when( 'wp_get_attachment_image_sizes' )->justReturn( '(max-width: 1920px) 100vw, 1920px' );
+
+		$instance = $this->getInstance();
+
+		// ...but the tag says width="56": attribute-sized, no srcset/sizes.
+		$content = '<img src="https://example.com/wp-content/uploads/icon.png" width="56" height="16">';
+		$block   = array( 'blockName' => 'etch/element' );
+
+		$result = $instance->filter_images( $content, $block );
+
+		$this->assertStringNotContainsString( 'srcset=', $result );
+		$this->assertStringNotContainsString( ' sizes=', $result );
+		$this->assertStringContainsString( 'width="56"', $result );
+	}
+
+	/**
+	 * Test the shared threshold: raising mwe_etchwp_auto_sizes_min_width also
+	 * stops enhance_image() from writing srcset/sizes below the new value.
+	 */
+	public function test_enhance_image_respects_min_width_filter(): void {
+		Functions\when( 'apply_filters' )->alias(
+			static function ( $hook, $value ) {
+				return 'mwe_etchwp_auto_sizes_min_width' === $hook ? 400 : $value;
+			}
+		);
+		Functions\when( 'wp_parse_url' )->alias( 'parse_url' );
+		Functions\when( 'attachment_url_to_postid' )->justReturn( 123 );
+		Functions\when( 'wp_get_attachment_metadata' )->justReturn( array(
+			'width'  => 300,
+			'height' => 200,
+		) );
+		Functions\when( 'get_post' )->justReturn( (object) array( 'ID' => 123 ) );
+		Functions\when( 'get_post_meta' )->justReturn( 'Card' );
+		Functions\when( 'wp_get_attachment_image_srcset' )->justReturn( 'card-300.jpg 300w, card-640.jpg 640w' );
+		Functions\when( 'wp_get_attachment_image_sizes' )->justReturn( '(max-width: 300px) 100vw, 300px' );
+
+		$instance = $this->getInstance();
+
+		$content = '<img src="https://example.com/wp-content/uploads/card.jpg">';
+		$block   = array( 'blockName' => 'etch/element' );
+
+		$result = $instance->filter_images( $content, $block );
+
+		$this->assertStringNotContainsString( 'srcset=', $result );
+		$this->assertStringNotContainsString( ' sizes=', $result );
+		$this->assertStringContainsString( 'width="300"', $result );
+	}
 }

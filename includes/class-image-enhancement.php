@@ -116,20 +116,34 @@ class Image_Enhancement {
 			return $filtered_image;
 		}
 
-		/**
-		 * Filter the width (in px, from the width attribute) below which an image is treated as
-		 * attribute-sized and loses core's `auto` sizes keyword.
-		 *
-		 * @since 1.2.12
-		 * @param int $min_width Minimum width attribute to keep `auto`. Default 150.
-		 */
-		$min_width = max( 1, (int) apply_filters( 'mwe_etchwp_auto_sizes_min_width', 150 ) );
+		$min_width = $this->get_auto_sizes_min_width();
 
 		if ( (int) $matches[1] >= $min_width ) {
 			return $filtered_image;
 		}
 
 		return preg_replace( '/(\ssizes=["\'])auto\s*,\s*/i', '$1', $filtered_image, 1 );
+	}
+
+	/**
+	 * Get the minimum width attribute below which an image is treated as attribute-sized.
+	 *
+	 * Shared knob for guard_auto_sizes() (strips core's `auto` keyword) and
+	 * add_attributes() (skips srcset/sizes) so both classify images identically.
+	 *
+	 * @since  1.2.12
+	 * @return int Minimum width attribute in px. At least 1.
+	 */
+	private function get_auto_sizes_min_width(): int {
+		/**
+		 * Filter the width (in px, from the width attribute) below which an image is treated as
+		 * attribute-sized: it receives no srcset/sizes attributes from this plugin and loses
+		 * core's `auto` sizes keyword.
+		 *
+		 * @since 1.2.12
+		 * @param int $min_width Minimum width attribute to keep responsive attributes and `auto`. Default 150.
+		 */
+		return max( 1, (int) apply_filters( 'mwe_etchwp_auto_sizes_min_width', 150 ) );
 	}
 
 	/**
@@ -185,6 +199,15 @@ class Image_Enhancement {
 		// If nothing is missing, return early (avoid DB queries).
 		if ( ! $needs_srcset && ! $needs_sizes && ! $needs_width && ! $needs_height && ! $needs_alt ) {
 			return $full_tag;
+		}
+
+		// Attribute-sized images receive no srcset/sizes (see add_attributes()): when those
+		// are the only missing attributes and the existing width attribute is below the
+		// auto-sizes threshold, skip the attachment lookup entirely.
+		if ( ( $needs_srcset || $needs_sizes ) && ! $needs_width && ! $needs_height && ! $needs_alt ) {
+			if ( preg_match( '/\swidth=["\'](\d+)["\']/i', $full_tag, $width_attr ) && (int) $width_attr[1] < $this->get_auto_sizes_min_width() ) {
+				return $full_tag;
+			}
 		}
 
 		// Get attachment ID from URL (uses caching and comprehensive lookup).
@@ -246,6 +269,17 @@ class Image_Enhancement {
 			$height = $metadata['height'];
 		}
 
+		// Attribute-sized images (effective width below the auto-sizes threshold) get no
+		// srcset/sizes: without a sizes attribute core never prepends `auto`, so the browser
+		// sizes these images from their width attribute instead of the container width.
+		// An existing width attribute wins over the resolved intrinsic width. Images with no
+		// width information at all keep the previous behaviour (documented decision, issue #9).
+		$effective_width = $width;
+		if ( preg_match( '/\swidth=["\'](\d+)["\']/i', $img_tag, $width_attr ) ) {
+			$effective_width = (int) $width_attr[1];
+		}
+		$is_attribute_sized = null !== $effective_width && $effective_width < $this->get_auto_sizes_min_width();
+
 		// Add width if not present.
 		if ( false === strpos( $img_tag, 'width=' ) && $width ) {
 			$attributes_to_add[] = 'width="' . $width . '"';
@@ -286,9 +320,9 @@ class Image_Enhancement {
 			}
 		}
 
-		// Add srcset if not present.
+		// Add srcset if not present (never for attribute-sized images).
 		$srcset_added = false;
-		if ( false === strpos( $img_tag, 'srcset=' ) ) {
+		if ( false === strpos( $img_tag, 'srcset=' ) && ! $is_attribute_sized ) {
 			$srcset = wp_get_attachment_image_srcset( $attachment_id );
 			if ( $srcset ) {
 				$attributes_to_add[] = 'srcset="' . esc_attr( $srcset ) . '"';
@@ -298,7 +332,7 @@ class Image_Enhancement {
 
 		// Add sizes if not present and srcset exists (either already present or just added).
 		$has_srcset = ( false !== strpos( $img_tag, 'srcset=' ) ) || $srcset_added;
-		if ( false === strpos( $img_tag, 'sizes=' ) && $has_srcset ) {
+		if ( false === strpos( $img_tag, 'sizes=' ) && $has_srcset && ! $is_attribute_sized ) {
 			$sizes = wp_get_attachment_image_sizes( $attachment_id );
 			if ( $sizes ) {
 				$attributes_to_add[] = 'sizes="' . esc_attr( $sizes ) . '"';
