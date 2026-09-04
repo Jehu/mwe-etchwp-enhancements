@@ -4,7 +4,7 @@ Tags: etch, page builder, images, responsive, focus point
 Requires at least: 5.9
 Tested up to: 6.9
 Requires PHP: 8.1
-Stable tag: 1.2.11
+Stable tag: 1.2.12
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -106,6 +106,13 @@ No, the plugin processes images during block rendering with minimal overhead. It
 No, the plugin only modifies the HTML output. Your original images and their metadata remain unchanged.
 
 == Changelog ==
+
+= 1.2.12 =
+* Changed: WordPress core `sizes="auto, …"` is no longer disabled site-wide; layout-aware image sizing stays enabled and a per-image guard strips `auto` only from small attribute-sized images (#8)
+* Added: `mwe_etchwp_disable_auto_sizes` filter to restore the previous global disable (#8)
+* Added: `mwe_etchwp_auto_sizes_min_width` filter controlling the attribute-sized threshold; invalid values are clamped to at least 1 (#8)
+* Changed: attribute-sized images (width below the threshold) no longer receive `srcset`/`sizes` from the plugin; the browser sizes them from their width attribute (#10)
+* Fixed: over-fetching on lazy-loaded content images (e.g. a lazy header logo fetched 2048w instead of 768w on large viewports) (#8)
 
 = 1.2.11 =
 * Fixed: AJAX request deduplication in focus point editor - concurrent requests for the same image now share a single request instead of firing duplicates
@@ -215,6 +222,9 @@ No, the plugin only modifies the HTML output. Your original images and their met
 * Filters and constants for feature control
 
 == Upgrade Notice ==
+
+= 1.2.12 =
+Image loading improves: WordPress core sizes="auto" is enabled again, so browsers pick better-fitting image files for lazy-loaded images. Small icons keep their fixed sizing. If you need the old global disable, add `add_filter( 'mwe_etchwp_disable_auto_sizes', '__return_true' );` — see README.
 
 = 1.2.11 =
 Performance improvement: AJAX request deduplication reduces redundant network calls when multiple image elements reference the same source. Also includes Etch 1.6.x compatibility fixes.

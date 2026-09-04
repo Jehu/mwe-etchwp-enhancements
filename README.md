@@ -321,6 +321,13 @@ This plugin follows:
 
 ## Changelog
 
+### 1.2.12 - 2026-09-04
+- **Changed:** WordPress core `sizes="auto, …"` is no longer disabled site-wide; layout-aware image sizing stays enabled and a per-image guard strips `auto` only from small attribute-sized images (#8)
+- **Added:** `mwe_etchwp_disable_auto_sizes` filter to restore the previous global disable (#8)
+- **Added:** `mwe_etchwp_auto_sizes_min_width` filter controlling the attribute-sized threshold; invalid values are clamped to at least 1 (#8)
+- **Changed:** attribute-sized images (width below the threshold) no longer receive `srcset`/`sizes` from the plugin; the browser sizes them from their width attribute (#10)
+- **Fixed:** over-fetching on lazy-loaded content images (e.g. a lazy header logo fetched 2048w instead of 768w on large viewports) (#8)
+
 ### 1.2.11 - 2026-08-11
 - **Fixed:** AJAX request deduplication in focus point editor - concurrent requests for the same image now share a single request instead of firing duplicates
 - **Fixed:** Combobox selector compatibility with Etch 1.6.x (updated from `.etch-combobox__input` to `.etch-combobox__native-input`)
