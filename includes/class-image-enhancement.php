@@ -112,13 +112,14 @@ class Image_Enhancement {
 			return $filtered_image;
 		}
 
-		if ( ! preg_match( '/\swidth=["\'](\d+)["\']/i', $filtered_image, $matches ) ) {
+		$width_attribute = $this->extract_width_attribute( $filtered_image );
+		if ( null === $width_attribute ) {
 			return $filtered_image;
 		}
 
 		$min_width = $this->get_auto_sizes_min_width();
 
-		if ( (int) $matches[1] >= $min_width ) {
+		if ( $width_attribute >= $min_width ) {
 			return $filtered_image;
 		}
 
@@ -144,6 +145,20 @@ class Image_Enhancement {
 		 * @param int $min_width Minimum width attribute to keep responsive attributes and `auto`. Default 150.
 		 */
 		return max( 1, (int) apply_filters( 'mwe_etchwp_auto_sizes_min_width', 150 ) );
+	}
+
+	/**
+	 * Extract the numeric value of an img tag's width attribute.
+	 *
+	 * @since  1.2.12
+	 * @param  string $tag The full img tag.
+	 * @return int|null   The width in px, or null when the tag has no numeric width attribute.
+	 */
+	private function extract_width_attribute( string $tag ): ?int {
+		if ( preg_match( '/\swidth=["\'](\d+)["\']/i', $tag, $matches ) ) {
+			return (int) $matches[1];
+		}
+		return null;
 	}
 
 	/**
@@ -199,15 +214,6 @@ class Image_Enhancement {
 		// If nothing is missing, return early (avoid DB queries).
 		if ( ! $needs_srcset && ! $needs_sizes && ! $needs_width && ! $needs_height && ! $needs_alt ) {
 			return $full_tag;
-		}
-
-		// Attribute-sized images receive no srcset/sizes (see add_attributes()): when those
-		// are the only missing attributes and the existing width attribute is below the
-		// auto-sizes threshold, skip the attachment lookup entirely.
-		if ( ( $needs_srcset || $needs_sizes ) && ! $needs_width && ! $needs_height && ! $needs_alt ) {
-			if ( preg_match( '/\swidth=["\'](\d+)["\']/i', $full_tag, $width_attr ) && (int) $width_attr[1] < $this->get_auto_sizes_min_width() ) {
-				return $full_tag;
-			}
 		}
 
 		// Get attachment ID from URL (uses caching and comprehensive lookup).
@@ -274,10 +280,7 @@ class Image_Enhancement {
 		// sizes these images from their width attribute instead of the container width.
 		// An existing width attribute wins over the resolved intrinsic width. Images with no
 		// width information at all keep the previous behaviour (documented decision, issue #9).
-		$effective_width = $width;
-		if ( preg_match( '/\swidth=["\'](\d+)["\']/i', $img_tag, $width_attr ) ) {
-			$effective_width = (int) $width_attr[1];
-		}
+		$effective_width = $this->extract_width_attribute( $img_tag ) ?? $width;
 		$is_attribute_sized = null !== $effective_width && $effective_width < $this->get_auto_sizes_min_width();
 
 		// Add width if not present.
