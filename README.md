@@ -218,6 +218,23 @@ add_filter( 'mwe_etchwp_skip_responsive_blocks', function( $blocks ) {
 } );
 ```
 
+#### `mwe_etchwp_disable_auto_sizes`
+
+Restore the pre-1.2.12 behaviour of disabling WordPress core's `sizes="auto, …"` (WP 6.7+) for **all** lazy-loaded images. By default the plugin now keeps core's layout-aware sizing and only strips `auto` from small, attribute-sized images (see the next filter).
+
+```php
+add_filter( 'mwe_etchwp_disable_auto_sizes', '__return_true' );
+```
+
+#### `mwe_etchwp_auto_sizes_min_width`
+
+Width attribute (in px) below which an image is treated as attribute-sized and loses core's `auto` sizes keyword. Small images with no CSS sizing (icons, slider arrows) would otherwise be laid out at container width. Default `150`.
+
+```php
+add_filter( 'mwe_etchwp_auto_sizes_min_width', function () {
+    return 200;
+} );
+```
 ### Available Constants
 
 #### `MWE_ETCHWP_IMAGE_ENHANCEMENT`
