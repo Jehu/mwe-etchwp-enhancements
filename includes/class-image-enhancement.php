@@ -123,7 +123,7 @@ class Image_Enhancement {
 		 * @since 1.2.12
 		 * @param int $min_width Minimum width attribute to keep `auto`. Default 150.
 		 */
-		$min_width = (int) apply_filters( 'mwe_etchwp_auto_sizes_min_width', 150 );
+		$min_width = max( 1, (int) apply_filters( 'mwe_etchwp_auto_sizes_min_width', 150 ) );
 
 		if ( (int) $matches[1] >= $min_width ) {
 			return $filtered_image;
